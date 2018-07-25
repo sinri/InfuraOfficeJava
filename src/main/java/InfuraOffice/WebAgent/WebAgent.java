@@ -1,7 +1,9 @@
 package InfuraOffice.WebAgent;
 
 import InfuraOffice.ThyLogger;
-import InfuraOffice.WebAgent.context.HomeHandler;
+import InfuraOffice.WebAgent.context.HomeContext;
+import InfuraOffice.WebAgent.context.LoginContext;
+import InfuraOffice.WebAgent.context.StaticContext;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -15,7 +17,7 @@ public class WebAgent {
 
         loadContext(server);
 
-        ThyLogger.logInfo("Context Loaded");
+        ThyLogger.logInfo("Context Loaded, ready to listen on port " + port);
 
         server.start();
     }
@@ -25,6 +27,12 @@ public class WebAgent {
         // TODO add contexts such as
         //server.createContext("/newTask", new ContextHandlerForNewTask());
         //server.createContext("/checkTask", new ContextHandlerForCheckTask());
-        server.createContext("/", new HomeHandler());
+
+
+        server.createContext("/", new HomeContext.RootPageHandler());
+        server.createContext("/static/", new StaticContext.ResourceHandler());
+        server.createContext("/page/", new StaticContext.ResourceHandler());
+
+        server.createContext("/api/login", new LoginContext.LoginHandler());
     }
 }

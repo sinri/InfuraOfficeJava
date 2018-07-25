@@ -1,5 +1,9 @@
 package InfuraOffice;
 
+import com.google.gson.Gson;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 
 public class InfuraOfficeConfig {
@@ -10,12 +14,30 @@ public class InfuraOfficeConfig {
 
     private static ArrayList<String> logLevelArray;
 
+    private static InfuraOfficeConfig instance;
+
     static {
         logLevelArray = new ArrayList<>();
         logLevelArray.add("DEBUG");
         logLevelArray.add("INFO");
         logLevelArray.add("WARN");
         logLevelArray.add("ERROR");
+
+        instance = new InfuraOfficeConfig();
+    }
+
+    public static InfuraOfficeConfig getSharedInstance() {
+        return instance;
+    }
+
+    public static void loadDefaultConfig() {
+        // load the default
+        instance = new InfuraOfficeConfig();
+    }
+
+    public static void loadConfigFile(String configFile) throws FileNotFoundException {
+        // read the instance file
+        instance = (new Gson()).fromJson((new FileReader(configFile)), InfuraOfficeConfig.class);
     }
 
     public Boolean isVisibleLogLevel(String level) {
@@ -34,11 +56,13 @@ public class InfuraOfficeConfig {
     public String privateKeyPath;
     public int httpListenPort;
     public int remoteAgentMaxWorker;
+    public String runtimeDir;
 
-    public InfuraOfficeConfig() {
+    protected InfuraOfficeConfig() {
         httpListenPort = 8080;
         minLogLevel = "INFO";
         privateKeyPath = "~/.ssh/id_rsa";
         remoteAgentMaxWorker = 3;
+        runtimeDir = "/Users/Sinri/Codes/idea/InfuraOfficeJava/runtime";// TODO it should be changed
     }
 }

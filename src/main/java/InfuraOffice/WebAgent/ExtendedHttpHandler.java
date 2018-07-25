@@ -4,17 +4,37 @@ import InfuraOffice.ThyLogger;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ExtendedHttpHandler implements HttpHandler {
+    private static Map<String, String> formData2Dic(String formData) {
+        Map<String, String> result = new HashMap<>();
+        if (formData == null || formData.trim().length() == 0) {
+            return result;
+        }
+        final String[] items = formData.split("&");
+        Arrays.stream(items).forEach(item -> {
+            final String[] keyAndVal = item.split("=");
+            if (keyAndVal.length == 2) {
+                try {
+                    final String key = URLDecoder.decode(keyAndVal[0], "utf8");
+                    final String val = URLDecoder.decode(keyAndVal[1], "utf8");
+                    result.put(key, val);
+                } catch (UnsupportedEncodingException e) {
+                    //
+                }
+            }
+        });
+        return result;
+    }
+
     HttpExchange httpExchange;
     Map<String, String> queryMap;
     Map<String, String> postMap;
@@ -61,6 +81,27 @@ public class ExtendedHttpHandler implements HttpHandler {
         return postMap;
     }
 
+    protected void setContentTypeHeaderForExtension(String extension) {
+        String contentType = "text/html; charset=UTF-8";
+        switch (extension) {
+            case "js":
+                contentType = "application/x-javascript";
+                break;
+            case "css":
+                contentType = "text/css";
+                break;
+            case "woff":
+                contentType = "application/octet-stream";
+                break;
+        }
+        httpExchange.getResponseHeaders().set("Content-Type", contentType);
+    }
+
+    protected void redirect(String location, int code) throws IOException {
+        httpExchange.getResponseHeaders().set("Location", location);
+        output("Redirect to " + location, code);
+    }
+
     protected void output(String output, int code) throws IOException {
         httpExchange.sendResponseHeaders(code, output.getBytes("utf8").length);
         OutputStream os = httpExchange.getResponseBody();
@@ -94,6 +135,40 @@ public class ExtendedHttpHandler implements HttpHandler {
         outputJSON(map);
     }
 
+    protected void showFrontendPage(String filename) throws IOException {
+        showFrontendPage(filename, 200);
+    }
+
+    protected void showFrontendPage(String filename, int code) throws IOException {
+        ThyLogger.logInfo("showFrontendPage: " + filename + " for code " + code);
+        InputStream resourceAsStream = ExtendedHttpHandler.class.getClassLoader().getResourceAsStream("frontend" + filename);
+        //String path = ExtendedHttpHandler.class.getClassLoader().getResource("frontend/"+filename).getPath();
+        ThyLogger.logInfo("fetch page from resources: " + resourceAsStream);// -> /Users/Sinri/Codes/idea/InfuraOfficeJava/target/classes/
+
+        try {
+            //BufferedReader br = new BufferedReader(new FileReader(path));
+            InputStreamReader x = new InputStreamReader(resourceAsStream);
+            BufferedReader br = new BufferedReader(x);
+            StringBuilder sb = new StringBuilder();
+            while (true) {
+                String line = br.readLine();
+                if (line == null) break;
+                sb.append(line);
+            }
+            br.close();
+            output(sb.toString(), code);
+        } catch (IOException exception) {
+            String output = "500 IO Error " + exception.getMessage();
+            output(output, 500);
+        }
+    }
+
+    protected void showFrontendResourceFile(String filename) throws IOException {
+        String extension = FilenameUtils.getExtension(filename);
+        setContentTypeHeaderForExtension(extension);
+        showFrontendPage(filename);
+    }
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         this.httpExchange = httpExchange;
@@ -103,24 +178,17 @@ public class ExtendedHttpHandler implements HttpHandler {
         ThyLogger.logInfo("Handling request: " + httpExchange.getRequestURI().getRawPath());
     }
 
-    private static Map<String, String> formData2Dic(String formData) {
-        Map<String, String> result = new HashMap<>();
-        if (formData == null || formData.trim().length() == 0) {
-            return result;
+    protected WebSessionAgent.WebSessionEntity validateUserSession() {
+        String token = seekPost("token", "");
+        WebSessionAgent.WebSessionEntity webSessionEntity = WebSessionAgent.getSharedInstance().validateSession(token);
+        // here might need to set some user validation
+        return webSessionEntity;
+    }
+
+    protected void assertRequestFromValidUserSession() throws Exception {
+        WebSessionAgent.WebSessionEntity webSessionEntity = validateUserSession();
+        if (webSessionEntity == null) {
+            throw new Exception("Not a valid session!");
         }
-        final String[] items = formData.split("&");
-        Arrays.stream(items).forEach(item -> {
-            final String[] keyAndVal = item.split("=");
-            if (keyAndVal.length == 2) {
-                try {
-                    final String key = URLDecoder.decode(keyAndVal[0], "utf8");
-                    final String val = URLDecoder.decode(keyAndVal[1], "utf8");
-                    result.put(key, val);
-                } catch (UnsupportedEncodingException e) {
-                    //
-                }
-            }
-        });
-        return result;
     }
 }
