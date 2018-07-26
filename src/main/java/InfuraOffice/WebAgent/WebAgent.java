@@ -22,17 +22,29 @@ public class WebAgent {
         server.start();
     }
 
-
+    /**
+     * Note:
+     * The api might need a header 'Content-Type: application/x-www-form-urlencoded'
+     *
+     * @param server HttpServer
+     */
     private static void loadContext(HttpServer server) {
-        // TODO add contexts such as
-        //server.createContext("/newTask", new ContextHandlerForNewTask());
-        //server.createContext("/checkTask", new ContextHandlerForCheckTask());
+        // TODO add contexts
 
+        // PAGE
 
+        // the web root of the web site
         server.createContext("/", new HomeContext.RootPageHandler());
+        // the entrance of resources
         server.createContext("/static/", new StaticContext.ResourceHandler());
+        // the entrance of the html pages
         server.createContext("/page/", new StaticContext.ResourceHandler());
 
-        server.createContext("/api/login", new LoginContext.LoginHandler());
+        // API
+
+        // login with username and password @2018-07-27 00:46:12
+        server.createContext("/api/session/login", new LoginContext.LoginHandler());
+        // check if the token is valid @2018-07-27 00:46:12
+        server.createContext("/api/session/validate", new LoginContext.SessionValidateHandler());
     }
 }

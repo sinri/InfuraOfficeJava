@@ -1,3 +1,4 @@
+import InfuraOffice.DataCenter.DataCenter;
 import InfuraOffice.DataCenter.UserDataCenter;
 import InfuraOffice.DataEntity.UserEntity;
 import InfuraOffice.InfuraOfficeConfig;
@@ -38,7 +39,7 @@ public class BasicTest {
 
     private static void test2() throws FileNotFoundException {
         InfuraOfficeConfig.loadConfigFile(configFile);
-        HashMap<String, UserEntity> map = new HashMap<>();
+        HashMap<String, UserEntity> map = DataCenter.getSharedInstance().getUserDataCenter().getEntities();
 
         for (int i = 1; i < 5; i++) {
             UserEntity user = new UserEntity();
@@ -51,7 +52,7 @@ public class BasicTest {
             user.privileges.add("P_" + (i * i * i + 1));
             map.put(user.username, user);
         }
-        new UserDataCenter().writeEntityMapIntoFile(map);
+        new UserDataCenter().writeEntityMapIntoFile();
 
         HashMap<String, UserEntity> users = new UserDataCenter().readEntityMapFromFile();
         System.out.println("read result: " + users);

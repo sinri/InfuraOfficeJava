@@ -7,6 +7,10 @@ import com.google.gson.JsonParser;
 import java.util.HashMap;
 
 public class PlatformDataCenter extends AnyDataCenter<PlatformEntity> {
+    public PlatformDataCenter() {
+        entities = new HashMap<>();
+    }
+
     @Override
     public String dataTypeOfT() {
         return "platforms";

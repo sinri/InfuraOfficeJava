@@ -13,6 +13,8 @@ abstract public class AnyDataCenter<T extends AnyEntity> {
 
     abstract public HashMap<String, T> readEntityMapFromFile();
 
+    protected HashMap<String, T> entities;
+
     static String getDataFile(String x) {
         return InfuraOfficeConfig.getSharedInstance().runtimeDir + "/" + x + ".data";
     }
@@ -35,18 +37,18 @@ abstract public class AnyDataCenter<T extends AnyEntity> {
         return DataCenter.decryptText(encryptedTextBuilder.toString());
     }
 
-    public void writeEntityMapIntoFile(HashMap<String, T> map) {
+    public void writeEntityMapIntoFile() {
         try {
             String file = getDataFile(dataTypeOfT());
             Gson gson = new Gson();
-            String json = gson.toJson(map);
+            String json = gson.toJson(entities);
 
             // encode
             String encrypted = DataCenter.encryptText(json);
 
-            BufferedWriter br = new BufferedWriter(new FileWriter(file));
-            br.write(encrypted);
-            br.close();
+            BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+            bw.write(encrypted);
+            bw.close();
             ThyLogger.logInfo("writeEntityMapIntoFile " + dataTypeOfT() + ": over");
         } catch (IOException e) {
             e.printStackTrace();
@@ -54,4 +56,18 @@ abstract public class AnyDataCenter<T extends AnyEntity> {
         }
     }
 
+    public void loadFromFile() {
+        HashMap<String, T> entityHashMap = readEntityMapFromFile();
+        if (entityHashMap != null) entities = entityHashMap;
+        ThyLogger.logDebug("AnyDataCenter Type " + dataTypeOfT() + " loadFromFile -> " + entities.size());
+        ThyLogger.logDebug("Keys: " + entities.keySet());
+    }
+
+    public HashMap<String, T> getEntities() {
+        return entities;
+    }
+
+    public T getEntityWithKey(String key) {
+        return entities.get(key);
+    }
 }

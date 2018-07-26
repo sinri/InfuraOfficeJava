@@ -16,13 +16,13 @@ public class ServerEntity extends AnyEntity {
     public HashSet<String> slkLogPathSet;
 
     public ServerEntity() {
-        serverName = null;
-        connectAddress = null;
+        serverName = "";
+        connectAddress = "";
         sshPort = 22;
         sshUser = "admin";
-        platformName = null;
-        assertID = null;
-        areaCode = null;
+        platformName = "";
+        assertID = "";
+        areaCode = "";
         slkLogPathSet = new HashSet<>();
     }
 

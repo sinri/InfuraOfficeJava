@@ -7,6 +7,9 @@ import com.google.gson.JsonParser;
 import java.util.HashMap;
 
 public class ServerGroupDataCenter extends AnyDataCenter<ServerGroupEntity> {
+    public ServerGroupDataCenter() {
+        entities = new HashMap<>();
+    }
     @Override
     public String dataTypeOfT() {
         return "server_groups";

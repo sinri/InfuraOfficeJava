@@ -10,7 +10,7 @@ public class ServerGroupEntity extends AnyEntity {
     public HashSet<String> servers;
 
     public ServerGroupEntity() {
-        groupName = null;
+        groupName = "";
         servers = new HashSet<>();
     }
 

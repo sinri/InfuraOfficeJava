@@ -17,14 +17,14 @@ public class DatabaseEntity extends AnyEntity {
     public HashMap<String, String> accounts;
 
     public DatabaseEntity() {
-        databaseName = null;
-        type = null;
-        host = null;
+        databaseName = "";
+        type = "";
+        host = "";
         port = 3306;
         portInDothan = 0;
-        platformName = null;
-        assertID = null;
-        areaCode = null;
+        platformName = "";
+        assertID = "";
+        areaCode = "";
         accounts = new HashMap<>();
     }
 

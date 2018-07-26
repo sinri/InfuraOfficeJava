@@ -2,8 +2,7 @@ package InfuraOffice;
 
 import com.google.gson.Gson;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.util.ArrayList;
 
 public class InfuraOfficeConfig {
@@ -64,5 +63,11 @@ public class InfuraOfficeConfig {
         privateKeyPath = "~/.ssh/id_rsa";
         remoteAgentMaxWorker = 3;
         runtimeDir = "/Users/Sinri/Codes/idea/InfuraOfficeJava/runtime";// TODO it should be changed
+    }
+
+    public void writeIntoConfigFile(String configFile) throws IOException {
+        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(configFile));
+        bufferedWriter.write((new Gson()).toJson(this));
+        bufferedWriter.close();
     }
 }

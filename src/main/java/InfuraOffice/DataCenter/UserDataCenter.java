@@ -4,9 +4,13 @@ import InfuraOffice.DataEntity.UserEntity;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.util.Date;
 import java.util.HashMap;
 
 public class UserDataCenter extends AnyDataCenter<UserEntity> {
+    public UserDataCenter() {
+        entities = new HashMap<>();
+    }
 
     @Override
     public String dataTypeOfT() {
@@ -32,5 +36,15 @@ public class UserDataCenter extends AnyDataCenter<UserEntity> {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public void recordUserLastLogin(String username, String ip) {
+        UserEntity userEntity = entities.get(username);
+        if (userEntity == null) return;
+        userEntity.lastLoginIP = ip;
+        userEntity.lastLoginTimestamp = (new Date()).getTime();
+        entities.replace(username, userEntity);
+
+        writeEntityMapIntoFile();
     }
 }

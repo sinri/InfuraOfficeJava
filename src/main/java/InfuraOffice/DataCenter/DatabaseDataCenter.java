@@ -8,6 +8,10 @@ import java.util.HashMap;
 
 public class DatabaseDataCenter extends AnyDataCenter<DatabaseEntity> {
 
+    public DatabaseDataCenter() {
+        entities = new HashMap<>();
+    }
+
     @Override
     public String dataTypeOfT() {
         return "databases";

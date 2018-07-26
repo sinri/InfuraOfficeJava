@@ -1,6 +1,6 @@
 package InfuraOffice.RemoteAgent;
 
-import InfuraOffice.InfuraOffice;
+import InfuraOffice.InfuraOfficeConfig;
 import InfuraOffice.ThyLogger;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
@@ -18,7 +18,7 @@ public class SSHAgent {
         String connectTag = "[" + user + "@" + host + ":" + port + "]";
 
         JSch jsch = new JSch();
-        jsch.addIdentity(InfuraOffice.getConfig().privateKeyPath);
+        jsch.addIdentity(InfuraOfficeConfig.getSharedInstance().privateKeyPath);
 
         Session session = jsch.getSession(user, host, port);
         session.setConfig("StrictHostKeyChecking", "no");

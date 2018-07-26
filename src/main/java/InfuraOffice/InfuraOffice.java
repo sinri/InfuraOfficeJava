@@ -10,7 +10,7 @@ public class InfuraOffice {
 
     /**
      * @return InfuraOfficeConfig
-     * @deprecated
+     * @deprecated use InfuraOfficeConfig.getSharedInstance() instead
      */
     public static InfuraOfficeConfig getConfig() {
         return InfuraOfficeConfig.getSharedInstance();
@@ -24,6 +24,7 @@ public class InfuraOffice {
             } else {
                 InfuraOfficeConfig.loadDefaultConfig();
             }
+            ThyLogger.logDebug("Here goes config log level " + InfuraOfficeConfig.getSharedInstance().minLogLevel);
 
             // load DataCenter
             DataCenter.getSharedInstance().loadFromFile();

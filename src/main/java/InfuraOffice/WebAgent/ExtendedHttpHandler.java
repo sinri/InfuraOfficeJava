@@ -38,11 +38,13 @@ public class ExtendedHttpHandler implements HttpHandler {
     HttpExchange httpExchange;
     Map<String, String> queryMap;
     Map<String, String> postMap;
+    HashMap<String, Object> outputDataMap;
 
 
     public ExtendedHttpHandler() {
         queryMap = null;
         postMap = null;
+        outputDataMap = new HashMap<>();
     }
 
     protected Map<String, String> getQueryMap(HttpExchange httpExchange) {
@@ -93,6 +95,9 @@ public class ExtendedHttpHandler implements HttpHandler {
             case "woff":
                 contentType = "application/octet-stream";
                 break;
+            case "json":
+                contentType = "application/json";
+                break;
         }
         httpExchange.getResponseHeaders().set("Content-Type", contentType);
     }
@@ -110,6 +115,7 @@ public class ExtendedHttpHandler implements HttpHandler {
     }
 
     protected void outputJSON(Map<String, Object> map) throws IOException {
+        setContentTypeHeaderForExtension("json");
         String json = (new Gson()).toJson(map);
         output(json, 200);
     }
@@ -126,6 +132,15 @@ public class ExtendedHttpHandler implements HttpHandler {
         map.put("code", "OK");
         map.put("data", data);
         outputJSON(map);
+    }
+
+    protected void registerDataProperty(String key, Object value) {
+        outputDataMap.put(key, value);
+    }
+
+    protected void sayOK() throws IOException {
+        ThyLogger.logDebug("outputDataMap: " + outputDataMap);
+        sayOK(outputDataMap);
     }
 
     protected void sayFail(String data) throws IOException {
@@ -181,7 +196,11 @@ public class ExtendedHttpHandler implements HttpHandler {
     protected WebSessionAgent.WebSessionEntity validateUserSession() {
         String token = seekPost("token", "");
         WebSessionAgent.WebSessionEntity webSessionEntity = WebSessionAgent.getSharedInstance().validateSession(token);
+        ThyLogger.logDebug("validateUserSession for token " + token + " -> " + webSessionEntity);
         // here might need to set some user validation
+        if (webSessionEntity == null || webSessionEntity.getCurrentUser() == null) {
+            return null;
+        }
         return webSessionEntity;
     }
 

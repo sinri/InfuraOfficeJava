@@ -10,10 +10,10 @@ public class PlatformEntity extends AnyEntity {
     public String securitySecret;
 
     public PlatformEntity() {
-        platformName = null;
-        platformType = null;
-        securityKey = null;
-        securitySecret = null;
+        platformName = "";
+        platformType = "";
+        securityKey = "";
+        securitySecret = "";
     }
 
     @Override

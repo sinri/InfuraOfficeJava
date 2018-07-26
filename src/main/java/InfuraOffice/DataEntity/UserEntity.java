@@ -10,14 +10,16 @@ public class UserEntity extends AnyEntity {
     public String role;
     public HashSet<String> privileges;
     public String lastLoginIP;
-    public int lastLoginTimestamp;
+    public long lastLoginTimestamp;
+    public String passwordHash;
 
     public UserEntity() {
-        username = null;
-        role = null;
+        username = "";
+        role = "";
         privileges = new HashSet<>();
-        lastLoginIP = null;
+        lastLoginIP = "";
         lastLoginTimestamp = 0;
+        passwordHash = "";
     }
 
     @Override
@@ -26,8 +28,19 @@ public class UserEntity extends AnyEntity {
         username = object.get("username").getAsString();
         role = object.get("role").getAsString();
         lastLoginIP = object.get("lastLoginIP").getAsString();
-        lastLoginTimestamp = object.get("lastLoginTimestamp").getAsInt();
+        lastLoginTimestamp = object.get("lastLoginTimestamp").getAsLong();
         privileges = new HashSet<>();
         object.get("privileges").getAsJsonArray().forEach(privilege -> privileges.add(privilege.getAsString()));
+        passwordHash = object.get("passwordHash").getAsString();
+    }
+
+    public boolean validatePasswordHash(String rawPassword) {
+        try {
+            //ThyLogger.logDebug("validatePasswordHash: "+rawPassword+" | "+passwordHash);
+            return PasswordHasher.check(rawPassword, passwordHash);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

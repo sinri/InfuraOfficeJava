@@ -5,7 +5,7 @@ import java.util.Date;
 public class ThyLogger {
     public static void log(String level, String content) {
         String text = "[" + (new Date().toString()) + "] [" + level + "] " + content;
-        if (!InfuraOffice.getConfig().isVisibleLogLevel(level)) {
+        if (!InfuraOfficeConfig.getSharedInstance().isVisibleLogLevel(level)) {
             return;
         }
         switch (level) {
