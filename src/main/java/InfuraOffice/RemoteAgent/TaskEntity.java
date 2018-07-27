@@ -58,7 +58,7 @@ public class TaskEntity {
                             ThyLogger.logInfo("TASK [" + task.index + "] STARTS");
                             // run ssh
                             task.status = TaskEntity.STATUS_EXECUTING;
-                            RemoteAgent.sharedInstance().taskMap.replace(task.index, task);
+                            RemoteAgent.sharedInstance().taskMap.put(task.index, task);
 
                             String output;
                             task.returnValue = -1;
@@ -74,7 +74,7 @@ public class TaskEntity {
                             task.output = output;
                             task.status = TaskEntity.STATUS_FINISHED;
 
-                            RemoteAgent.sharedInstance().taskMap.replace(task.index, task);
+                            RemoteAgent.sharedInstance().taskMap.put(task.index, task);
                             ThyLogger.logInfo("PoolAgent.taskMap counts " + RemoteAgent.sharedInstance().taskMap.size());
 
                             ThyLogger.logInfo("TASK [" + task.index + "] ENDS");

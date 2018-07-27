@@ -6,6 +6,11 @@ import com.google.gson.JsonObject;
 import java.util.HashSet;
 
 public class UserEntity extends AnyEntity {
+    public final static String ROLE_ADMIN = "ADMIN";
+    public final static String ROLE_USER = "USER";
+
+    public final static String PRIVILEGE_VAIN = "VAIN";
+
     public String username;
     public String role;
     public HashSet<String> privileges;

@@ -73,4 +73,13 @@ abstract public class AnyDataCenter<T extends AnyEntity> {
     public T getEntityWithKey(String key) {
         return entities.get(key);
     }
+
+    public void updateEntityWithKey(String key, T entity) {
+        entities.put(key, entity);
+        writeEntityMapIntoFile();
+    }
+
+    public void removeEntityWithKey(String key) {
+        entities.remove(key);
+    }
 }

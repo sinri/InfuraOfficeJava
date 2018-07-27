@@ -49,7 +49,7 @@ public class WebSessionAgent {
         WebSessionEntity webSessionEntity = new WebSessionEntity();
         webSessionEntity.token = PasswordHasher.md5(userEntity.username + "_" + (new Date()).getTime()) + (int) Math.rint(Math.random() * 1000);
         webSessionEntity.username = userEntity.username;
-        webSessionEntity.expireTimestamp = (new Date().getTime()) + 3600 * 8;
+        webSessionEntity.expireTimestamp = (new Date().getTime()) + 3600 * 8 * 1000;
 
         sessions.put(webSessionEntity.token, webSessionEntity);
 

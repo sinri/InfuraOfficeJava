@@ -1,10 +1,13 @@
 package InfuraOffice;
 
 import InfuraOffice.DataCenter.DataCenter;
+import InfuraOffice.DataEntity.PasswordHasher;
+import InfuraOffice.DataEntity.UserEntity;
 import InfuraOffice.RemoteAgent.RemoteAgent;
 import InfuraOffice.WebAgent.WebAgent;
 
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class InfuraOffice {
 
@@ -32,10 +35,35 @@ public class InfuraOffice {
             // set up daemon
             RemoteAgent.initializeSharedInstance(InfuraOfficeConfig.getSharedInstance().remoteAgentMaxWorker);
             // TODO set up schedule
+
+            // ensureUserAvailable
+            ensureUserAvailable();
+
             // set up HTTP service
             WebAgent.listen(InfuraOfficeConfig.getSharedInstance().httpListenPort);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void ensureUserAvailable() throws Exception {
+        // for user
+        HashMap<String, UserEntity> users = DataCenter.getSharedInstance().getUserDataCenter().getEntities();
+        if (users.size() == 0) {
+            UserEntity userEntity = new UserEntity();
+            userEntity.username = "admin";
+            userEntity.role = UserEntity.ROLE_ADMIN;
+            userEntity.privileges = new HashSet<>();
+            userEntity.privileges.add(UserEntity.PRIVILEGE_VAIN);
+            userEntity.passwordHash = PasswordHasher.getSaltedHash("InGodWeTrust");
+
+            // check
+            if (!PasswordHasher.check("InGodWeTrust", userEntity.passwordHash)) {
+                throw new Exception("ERROR! PW CANNOT BE VALIDATED");
+            }
+
+            users.put(userEntity.username, userEntity);
+            DataCenter.getSharedInstance().getUserDataCenter().writeEntityMapIntoFile();
         }
     }
 }

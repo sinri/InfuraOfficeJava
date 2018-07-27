@@ -43,7 +43,7 @@ public class UserDataCenter extends AnyDataCenter<UserEntity> {
         if (userEntity == null) return;
         userEntity.lastLoginIP = ip;
         userEntity.lastLoginTimestamp = (new Date()).getTime();
-        entities.replace(username, userEntity);
+        entities.put(username, userEntity);
 
         writeEntityMapIntoFile();
     }

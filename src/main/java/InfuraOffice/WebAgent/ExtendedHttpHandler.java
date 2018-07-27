@@ -1,7 +1,9 @@
 package InfuraOffice.WebAgent;
 
+import InfuraOffice.DataEntity.UserEntity;
 import InfuraOffice.ThyLogger;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.commons.io.FilenameUtils;
@@ -9,11 +11,9 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.net.URLDecoder;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-public class ExtendedHttpHandler implements HttpHandler {
+abstract public class ExtendedHttpHandler implements HttpHandler {
     private static Map<String, String> formData2Dic(String formData) {
         Map<String, String> result = new HashMap<>();
         if (formData == null || formData.trim().length() == 0) {
@@ -35,10 +35,11 @@ public class ExtendedHttpHandler implements HttpHandler {
         return result;
     }
 
-    HttpExchange httpExchange;
+    protected HttpExchange httpExchange;
     Map<String, String> queryMap;
     Map<String, String> postMap;
     HashMap<String, Object> outputDataMap;
+    protected WebSessionAgent.WebSessionEntity session;
 
 
     public ExtendedHttpHandler() {
@@ -112,6 +113,9 @@ public class ExtendedHttpHandler implements HttpHandler {
         OutputStream os = httpExchange.getResponseBody();
         os.write(output.getBytes("utf8"));
         os.close();
+        if (code != 200) {
+            ThyLogger.logError("Abnormal Response [" + code + "]: " + output);
+        }
     }
 
     protected void outputJSON(Map<String, Object> map) throws IOException {
@@ -131,6 +135,13 @@ public class ExtendedHttpHandler implements HttpHandler {
         HashMap<String, Object> map = new HashMap<>();
         map.put("code", "OK");
         map.put("data", data);
+        outputJSON(map);
+    }
+
+    protected void sayOK(JsonElement jsonElement) throws IOException {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("code", "OK");
+        map.put("data", jsonElement);
         outputJSON(map);
     }
 
@@ -189,8 +200,62 @@ public class ExtendedHttpHandler implements HttpHandler {
         this.httpExchange = httpExchange;
         queryMap = getQueryMap(httpExchange);
         postMap = getPostMap(httpExchange);
+        session = validateUserSession();
 
         ThyLogger.logInfo("Handling request: " + httpExchange.getRequestURI().getRawPath());
+
+        if (validSessionRequired() && session == null) {
+            output("401 - No Valid Session!", 401);
+            return;
+        }
+        // check valid session for role and privilege limitation
+        if (session != null && !session.getCurrentUser().role.equals(UserEntity.ROLE_ADMIN)) {
+            Set<String> rolesRequired = rolesRequired();
+            if (session != null && rolesRequired != null) {
+                if (!rolesRequired.contains(session.getCurrentUser().role)) {
+                    output("403 - Forbidden as Role Limited!", 403);
+                    return;
+                }
+            }
+            Set<String> privilegesRequired = privilegesRequired();
+            if (session != null && privilegesRequired != null) {
+                if (!session.getCurrentUser().privileges.containsAll(privilegesRequired)) {
+                    output("403 - Forbidden as Privilege Lack", 403);
+                    return;
+                }
+            }
+        }
+
+        try {
+            realHandler();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            processException(exception);
+        }
+    }
+
+    protected boolean validSessionRequired() {
+        return true;
+    }
+
+    abstract protected void realHandler() throws Exception;
+
+    protected void processException(Exception exception) throws IOException {
+        sayFail(exception.getMessage());
+    }
+
+    protected HashSet<String> rolesRequired() {
+        return null;
+    }
+
+    protected HashSet<String> privilegesRequired() {
+        return null;
+    }
+
+    protected final static HashSet<String> adminRoleSetForRolesRequired() {
+        HashSet<String> strings = new HashSet<>();
+        strings.add(UserEntity.ROLE_ADMIN);
+        return strings;
     }
 
     protected WebSessionAgent.WebSessionEntity validateUserSession() {
