@@ -38,22 +38,25 @@ abstract public class AnyDataCenter<T extends AnyEntity> {
     }
 
     public void writeEntityMapIntoFile() {
-        try {
-            String file = getDataFile(dataTypeOfT());
-            Gson gson = new Gson();
-            String json = gson.toJson(entities);
+        // this work should be done in Asynchronous Thread Pool
+        DataCenter.getSharedInstance().registerDataTask(() -> {
+            try {
+                String file = getDataFile(dataTypeOfT());
+                Gson gson = new Gson();
+                String json = gson.toJson(entities);
 
-            // encode
-            String encrypted = DataCenter.encryptText(json);
+                // encode
+                String encrypted = DataCenter.encryptText(json);
 
-            BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-            bw.write(encrypted);
-            bw.close();
-            ThyLogger.logInfo("writeEntityMapIntoFile " + dataTypeOfT() + ": over");
-        } catch (IOException e) {
-            e.printStackTrace();
-            ThyLogger.logError(e.getMessage());
-        }
+                BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+                bw.write(encrypted);
+                bw.close();
+                ThyLogger.logInfo("writeEntityMapIntoFile " + dataTypeOfT() + ": over");
+            } catch (IOException e) {
+                e.printStackTrace();
+                ThyLogger.logError(e.getMessage());
+            }
+        });
     }
 
     public void loadFromFile() {

@@ -1,5 +1,8 @@
 package InfuraOffice.DataCenter;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class DataCenter {
     private static DataCenter instance;
 
@@ -19,12 +22,11 @@ public class DataCenter {
     PlatformDataCenter platformDataCenter;
     DatabaseDataCenter databaseDataCenter;
 
+    ExecutorService dataExecutorService;
+
     protected DataCenter() {
-//        users = new HashMap<>();
-//        servers = new HashMap<>();
-//        serverGroups = new HashMap<>();
-//        platforms = new HashMap<>();
-//        databases = new HashMap<>();
+        dataExecutorService = Executors.newSingleThreadExecutor();
+
         userDataCenter = new UserDataCenter();
         serverDataCenter = new ServerDataCenter();
         serverGroupDataCenter = new ServerGroupDataCenter();
@@ -37,13 +39,17 @@ public class DataCenter {
     }
 
     public static String encryptText(String raw) {
-        // TODO encrypt
+        // encrypt would be added later
         return raw;
     }
 
     public static String decryptText(String encrypted) {
-        // TODO decrypt
+        // decrypt would be added later
         return encrypted;
+    }
+
+    public void registerDataTask(Runnable task) {
+        dataExecutorService.execute(task);
     }
 
     public UserDataCenter getUserDataCenter() {

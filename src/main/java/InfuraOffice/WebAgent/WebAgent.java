@@ -29,8 +29,6 @@ public class WebAgent {
      * @param server HttpServer
      */
     private static void loadContext(HttpServer server) {
-        // TODO add contexts
-
         // PAGE
 
         // the web root of the web site

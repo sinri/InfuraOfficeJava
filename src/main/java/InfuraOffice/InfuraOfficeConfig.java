@@ -62,7 +62,7 @@ public class InfuraOfficeConfig {
         minLogLevel = "INFO";
         privateKeyPath = "~/.ssh/id_rsa";
         remoteAgentMaxWorker = 3;
-        runtimeDir = "/Users/Sinri/Codes/idea/InfuraOfficeJava/runtime";// TODO it should be changed
+        runtimeDir = "/opt/InfuraOffice/runtime";
     }
 
     public void writeIntoConfigFile(String configFile) throws IOException {
