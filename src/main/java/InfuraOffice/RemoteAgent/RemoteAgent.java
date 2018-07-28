@@ -33,6 +33,10 @@ public class RemoteAgent {
         return taskIndex;
     }
 
+    public TaskEntity readTask(String taskIndex) {
+        return taskMap.get(taskIndex);
+    }
+
     public void arisePoolRecycleJob() {
         newTask(() -> {
             ThyLogger.logInfo("POOL TASK MAP CLEAN STARTS, size: " + taskMap.size());

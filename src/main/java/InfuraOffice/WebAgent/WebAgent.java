@@ -3,6 +3,8 @@ package InfuraOffice.WebAgent;
 import InfuraOffice.ThyLogger;
 import InfuraOffice.WebAgent.context.HomeContext;
 import InfuraOffice.WebAgent.context.LoginContext;
+import InfuraOffice.WebAgent.context.Maintain.RemoteTaskContext;
+import InfuraOffice.WebAgent.context.Maintain.ServerMaintainContext;
 import InfuraOffice.WebAgent.context.Management.*;
 import InfuraOffice.WebAgent.context.StaticContext;
 import com.sun.net.httpserver.HttpServer;
@@ -84,5 +86,12 @@ public class WebAgent {
         server.createContext("/api/manage/servergroup/info", new ServerGroupManageContext.ViewServerGroupInfoHandler());
         // manage server group, update delete
         server.createContext("/api/manage/servergroup/act", new ServerGroupManageContext.UpdateServerGroupHandler());
+
+        // PART III: MAINTAIN
+
+        // check task
+        server.createContext("/api/maintain/task/info", new RemoteTaskContext.RequireCommandTaskOnServersHandler());
+        // run command on server
+        server.createContext("/api/maintain/server/command", new ServerMaintainContext.RequireCommandTaskOnServersHandler());
     }
 }

@@ -1,8 +1,10 @@
 package InfuraOffice.DataEntity;
 
+import InfuraOffice.RemoteAgent.TaskEntity;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class ServerEntity extends AnyEntity {
@@ -38,5 +40,16 @@ public class ServerEntity extends AnyEntity {
         areaCode = object.get("areaCode").getAsString();
         slkLogPathSet = new HashSet<>();
         object.get("slkLogPathSet").getAsJsonArray().forEach(path -> slkLogPathSet.add(path.getAsString()));
+    }
+
+    public String raiseRemoteCommandExecutionTask(String command) {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("ip", connectAddress);
+        map.put("user", sshUser);
+        map.put("command", command);
+        map.put("port", "" + sshPort);
+        TaskEntity taskEntity = TaskEntity.createTask("command", map);
+        if (taskEntity == null) return "";
+        return taskEntity.index;
     }
 }
