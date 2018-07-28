@@ -1,10 +1,7 @@
 package InfuraOffice.WebAgent;
 
 import InfuraOffice.ThyLogger;
-import InfuraOffice.WebAgent.context.HomeContext;
-import InfuraOffice.WebAgent.context.LoginContext;
-import InfuraOffice.WebAgent.context.StaticContext;
-import InfuraOffice.WebAgent.context.UserManageContext;
+import InfuraOffice.WebAgent.context.*;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -49,11 +46,19 @@ public class WebAgent {
         server.createContext("/api/session/validate", new LoginContext.SessionValidateHandler());
 
         // PART II: MANAGE
+
         // manage users, update or delete @2018-07-27 23:23:56
         server.createContext("/api/manage/user/act", new UserManageContext.UpdateUserHandler());
         // view info of one user @2018-07-27 23:30:29
         server.createContext("/api/manage/user/info", new UserManageContext.ViewUserInfoHandler());
         // user list @2018-07-27 23:32:04
         server.createContext("/api/manage/user/list", new UserManageContext.ListUserHandler());
+
+        // platform list @2018-07-28 13:48:03
+        server.createContext("/api/manage/platform/list", new PlatformManageContext.ListPlatformHandler());
+        // fetch one platform info @2018-07-28 13:48:03
+        server.createContext("/api/manage/platform/info", new PlatformManageContext.ViewPlatformInfoHandler());
+        // manage platform, update or delete @2018-07-28 13:48:03
+        server.createContext("/api/manage/platform/act", new PlatformManageContext.UpdatePlatformHandler());
     }
 }
