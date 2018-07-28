@@ -22,6 +22,8 @@ public class DataCenter {
     PlatformDataCenter platformDataCenter;
     DatabaseDataCenter databaseDataCenter;
 
+    ServerMaintainJobDataCenter serverMaintainJobDataCenter;
+
     ExecutorService dataExecutorService;
 
     protected DataCenter() {
@@ -32,6 +34,8 @@ public class DataCenter {
         serverGroupDataCenter = new ServerGroupDataCenter();
         platformDataCenter = new PlatformDataCenter();
         databaseDataCenter = new DatabaseDataCenter();
+
+        serverMaintainJobDataCenter = new ServerMaintainJobDataCenter();
     }
 
     public static DataCenter getSharedInstance() {
@@ -46,6 +50,10 @@ public class DataCenter {
     public static String decryptText(String encrypted) {
         // decrypt would be added later
         return encrypted;
+    }
+
+    public ServerMaintainJobDataCenter getServerMaintainJobDataCenter() {
+        return serverMaintainJobDataCenter;
     }
 
     public void registerDataTask(Runnable task) {
@@ -112,6 +120,7 @@ public class DataCenter {
         databaseDataCenter.loadFromFile();
         serverDataCenter.loadFromFile();
         serverGroupDataCenter.loadFromFile();
+        serverMaintainJobDataCenter.loadFromFile();
     }
 
     public void writeIntoFile() {
@@ -120,5 +129,6 @@ public class DataCenter {
         databaseDataCenter.writeEntityMapIntoFile();
         serverDataCenter.writeEntityMapIntoFile();
         serverGroupDataCenter.writeEntityMapIntoFile();
+        serverMaintainJobDataCenter.writeEntityMapIntoFile();
     }
 }
