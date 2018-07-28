@@ -67,13 +67,14 @@ public class ServerManageContext {
                     serverEntity.sshUser = seekPost("sshUser", "admin");
                     serverEntity.sshPort = Integer.parseInt(seekPost("sshPort", "22"));
                     serverEntity.connectAddress = seekPost("connectAddress", "");
-                    DataCenter.getSharedInstance().getServerDataCenter().updateEntityWithKey(serverName, serverEntity);
-                    break;
-                case "update_slk_paths":
-                    if (serverEntity == null) throw new Exception("target server does not exist");
+
+                    serverEntity.slkLogPathSet = new HashSet<>();
                     String paths = seekPost("slk_paths", "");
                     String[] split = paths.split("[\r\n]+");
-                    for (String path : split) serverEntity.slkLogPathSet.add(path.trim());
+                    for (String path : split) {
+                        if (path.trim().length() > 0) serverEntity.slkLogPathSet.add(path.trim());
+                    }
+
                     DataCenter.getSharedInstance().getServerDataCenter().updateEntityWithKey(serverName, serverEntity);
                     break;
                 default:

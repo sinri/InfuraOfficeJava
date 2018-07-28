@@ -3,10 +3,7 @@ package InfuraOffice.WebAgent;
 import InfuraOffice.ThyLogger;
 import InfuraOffice.WebAgent.context.HomeContext;
 import InfuraOffice.WebAgent.context.LoginContext;
-import InfuraOffice.WebAgent.context.Management.DatabaseManageContext;
-import InfuraOffice.WebAgent.context.Management.PlatformManageContext;
-import InfuraOffice.WebAgent.context.Management.ServerManageContext;
-import InfuraOffice.WebAgent.context.Management.UserManageContext;
+import InfuraOffice.WebAgent.context.Management.*;
 import InfuraOffice.WebAgent.context.StaticContext;
 import com.sun.net.httpserver.HttpServer;
 
@@ -78,7 +75,14 @@ public class WebAgent {
         server.createContext("/api/manage/server/list", new ServerManageContext.ListServerHandler());
         // fetch one server info
         server.createContext("/api/manage/server/info", new ServerManageContext.ViewServerInfoHandler());
-        // manage server, update delete update_slk_paths
+        // manage server, update delete
         server.createContext("/api/manage/server/act", new ServerManageContext.UpdateServerHandler());
+
+        // server group list
+        server.createContext("/api/manage/servergroup/list", new ServerGroupManageContext.ListServerGroupHandler());
+        // fetch one server group info
+        server.createContext("/api/manage/servergroup/info", new ServerGroupManageContext.ViewServerGroupInfoHandler());
+        // manage server group, update delete
+        server.createContext("/api/manage/servergroup/act", new ServerGroupManageContext.UpdateServerGroupHandler());
     }
 }
