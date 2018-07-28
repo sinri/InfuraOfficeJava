@@ -5,6 +5,7 @@ import InfuraOffice.WebAgent.context.HomeContext;
 import InfuraOffice.WebAgent.context.LoginContext;
 import InfuraOffice.WebAgent.context.Management.DatabaseManageContext;
 import InfuraOffice.WebAgent.context.Management.PlatformManageContext;
+import InfuraOffice.WebAgent.context.Management.ServerManageContext;
 import InfuraOffice.WebAgent.context.Management.UserManageContext;
 import InfuraOffice.WebAgent.context.StaticContext;
 import com.sun.net.httpserver.HttpServer;
@@ -72,5 +73,12 @@ public class WebAgent {
         server.createContext("/api/manage/database/info", new DatabaseManageContext.ViewDatabaseInfoHandler());
         // manage database, update delete update_account remove_account
         server.createContext("/api/manage/database/act", new DatabaseManageContext.UpdateDatabaseHandler());
+
+        // server list
+        server.createContext("/api/manage/server/list", new ServerManageContext.ListServerHandler());
+        // fetch one server info
+        server.createContext("/api/manage/server/info", new ServerManageContext.ViewServerInfoHandler());
+        // manage server, update delete update_slk_paths
+        server.createContext("/api/manage/server/act", new ServerManageContext.UpdateServerHandler());
     }
 }
