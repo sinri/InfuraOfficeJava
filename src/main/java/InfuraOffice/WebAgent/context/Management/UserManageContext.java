@@ -1,4 +1,4 @@
-package InfuraOffice.WebAgent.context;
+package InfuraOffice.WebAgent.context.Management;
 
 import InfuraOffice.DataCenter.DataCenter;
 import InfuraOffice.DataEntity.PasswordHasher;

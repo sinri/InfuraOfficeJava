@@ -1,7 +1,12 @@
 package InfuraOffice.WebAgent;
 
 import InfuraOffice.ThyLogger;
-import InfuraOffice.WebAgent.context.*;
+import InfuraOffice.WebAgent.context.HomeContext;
+import InfuraOffice.WebAgent.context.LoginContext;
+import InfuraOffice.WebAgent.context.Management.DatabaseManageContext;
+import InfuraOffice.WebAgent.context.Management.PlatformManageContext;
+import InfuraOffice.WebAgent.context.Management.UserManageContext;
+import InfuraOffice.WebAgent.context.StaticContext;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -60,5 +65,12 @@ public class WebAgent {
         server.createContext("/api/manage/platform/info", new PlatformManageContext.ViewPlatformInfoHandler());
         // manage platform, update or delete @2018-07-28 13:48:03
         server.createContext("/api/manage/platform/act", new PlatformManageContext.UpdatePlatformHandler());
+
+        // database list
+        server.createContext("/api/manage/database/list", new DatabaseManageContext.ListDatabaseHandler());
+        // fetch one database info
+        server.createContext("/api/manage/database/info", new DatabaseManageContext.ViewDatabaseInfoHandler());
+        // manage database, update delete update_account remove_account
+        server.createContext("/api/manage/database/act", new DatabaseManageContext.UpdateDatabaseHandler());
     }
 }
