@@ -1,0 +1,21 @@
+#app {
+    margin: 10px;
+}
+
+div {
+    font-size: 14px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table th {
+    background: lightblue;
+}
+
+table th, td {
+    padding: 5px;
+    border: 1px solid lightgray;
+    font-size: 14px;
+}

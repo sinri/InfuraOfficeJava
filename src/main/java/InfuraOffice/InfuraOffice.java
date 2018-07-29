@@ -4,6 +4,7 @@ import InfuraOffice.DataCenter.DataCenter;
 import InfuraOffice.DataEntity.PasswordHasher;
 import InfuraOffice.DataEntity.UserEntity;
 import InfuraOffice.RemoteAgent.RemoteAgent;
+import InfuraOffice.ScheduleAgent.ScheduleAgent;
 import InfuraOffice.WebAgent.WebAgent;
 
 import java.util.HashMap;
@@ -34,7 +35,8 @@ public class InfuraOffice {
 
             // set up daemon
             RemoteAgent.initializeSharedInstance(InfuraOfficeConfig.getSharedInstance().remoteAgentMaxWorker);
-            // TODO set up schedule
+            // set up schedule
+            ScheduleAgent.initializeScheduler();
 
             // ensureUserAvailable
             ensureUserAvailable();

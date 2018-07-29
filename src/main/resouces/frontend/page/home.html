@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home - InfuraOffice</title>
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/js.cookie.js"></script>
+    <script src="../static/InfuraOfficeFrontendHelper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/common.css"/>
+</head>
+<body>
+<div id="app">
+    <div>
+        <h1>Home - InfuraOffice</h1>
+        <div>
+            <p>
+                Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
+                <button v-on:click="logout">Sign out</button>
+            </p>
+        </div>
+    </div>
+    <div if="user_info.role='ADMIN'">
+        <h2>Management</h2>
+        <div>
+            <ul>
+                <li>
+                    <a href="manage_user.html">Users</a>
+                </li>
+                <li>
+                    <a href="manage_platform.html">Platforms</a>
+                </li>
+                <li>
+                    <a href="manage_server.html">Servers</a>
+                </li>
+                <li>
+                    <a href="manage_server_group.html">Server Groups</a>
+                </li>
+                <li>
+                    <a href="manage_database.html">Databases</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            user_info: {
+                privileges: [],
+                role: "",
+                expire: 0,
+                username: '',
+                token: '',
+            }
+        },
+        methods: {
+            logout: function () {
+                CookieHelper.clearToken();
+                location.href = "login.html";
+            },
+            validateSession: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/session/validate",
+                    {},
+                    (data) => {
+                        this.user_info = data;
+                    },
+                    (error) => {
+                        console.log(error);
+                        alert("Session cannot be validated, you can try to logout and login again.");
+                    }
+                )
+            }
+        },
+        mounted: function () {
+            if (!CookieHelper.isLogin()) {
+                location.href = "login.html";
+                return;
+            }
+            this.validateSession();
+        }
+    });
+</script>
+</body>
+</html>

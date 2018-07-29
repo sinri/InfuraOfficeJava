@@ -16,6 +16,7 @@ public class ServerMaintainJobEntity extends AnyEntity {
     public String cronExpression;
     public String type;
     public String command;
+    public boolean active;
 
     public ServerMaintainJobEntity() {
         cronJobName = "";
@@ -24,6 +25,7 @@ public class ServerMaintainJobEntity extends AnyEntity {
         cronExpression = "";
         type = "";
         command = "";
+        active = false;
     }
 
     @Override
@@ -31,6 +33,7 @@ public class ServerMaintainJobEntity extends AnyEntity {
         JsonObject object = jsonElement.getAsJsonObject();
         cronJobName = object.get("cronJobName").getAsString();
         cronExpression = object.get("cronExpression").getAsString();
+        active = object.get("active").getAsBoolean();
         type = object.get("type").getAsString();
         command = object.get("command").getAsString();
         serverGroupNames = new HashSet<>();

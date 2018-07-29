@@ -4,6 +4,7 @@ import InfuraOffice.DataEntity.UserEntity;
 import InfuraOffice.ThyLogger;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.commons.io.FilenameUtils;
@@ -38,6 +39,7 @@ abstract public class ExtendedHttpHandler implements HttpHandler {
     protected HttpExchange httpExchange;
     Map<String, String> queryMap;
     Map<String, String> postMap;
+    JsonElement postJsonElement;
     HashMap<String, Object> outputDataMap;
     protected WebSessionAgent.WebSessionEntity session;
 
@@ -45,19 +47,30 @@ abstract public class ExtendedHttpHandler implements HttpHandler {
     public ExtendedHttpHandler() {
         queryMap = null;
         postMap = null;
+        postJsonElement = null;
         outputDataMap = new HashMap<>();
     }
 
-    protected Map<String, String> getQueryMap(HttpExchange httpExchange) {
+    private void readQueryMap(HttpExchange httpExchange) {
         //获得查询字符串(get)
         String queryString = httpExchange.getRequestURI().getQuery();
-        return formData2Dic(queryString);
+        queryMap = formData2Dic(queryString);
     }
 
-    protected Map<String, String> getPostMap(HttpExchange httpExchange) throws IOException {
+    private void readPostMap(HttpExchange httpExchange) throws IOException {
         //获得表单提交数据(post)
         String postString = IOUtils.toString(httpExchange.getRequestBody(), "utf8");
-        return formData2Dic(postString);
+
+        try {
+            postJsonElement = (new JsonParser()).parse(postString);
+            if (postJsonElement == null || postJsonElement.isJsonNull()) {
+                throw new Exception("post content seems not to be json");
+            }
+        } catch (Exception e) {
+            ThyLogger.logDebug("Not a json post body! " + e.getMessage());
+            postJsonElement = null;
+            postMap = formData2Dic(postString);
+        }
     }
 
     protected String seekQuery(String field) {
@@ -73,6 +86,15 @@ abstract public class ExtendedHttpHandler implements HttpHandler {
     }
 
     protected String seekPost(String field, String defaultValue) {
+        //ThyLogger.logDebug("seek in post: "+postMap+" and json: "+postJsonElement);
+        if (postJsonElement != null) {
+            JsonElement jsonElement = postJsonElement.getAsJsonObject().get(field);
+            if (jsonElement != null) {
+                return jsonElement.getAsString();
+            } else {
+                return defaultValue;
+            }
+        }
         return postMap.getOrDefault(field, defaultValue);
     }
 
@@ -84,11 +106,15 @@ abstract public class ExtendedHttpHandler implements HttpHandler {
         return postMap;
     }
 
+    protected JsonElement getPostJsonElement() {
+        return postJsonElement;
+    }
+
     protected void setContentTypeHeaderForExtension(String extension) {
         String contentType = "text/html; charset=UTF-8";
         switch (extension) {
             case "js":
-                contentType = "application/x-javascript";
+                contentType = "application/javascript";
                 break;
             case "css":
                 contentType = "text/css";
@@ -171,6 +197,11 @@ abstract public class ExtendedHttpHandler implements HttpHandler {
         //String path = ExtendedHttpHandler.class.getClassLoader().getResource("frontend/"+filename).getPath();
         ThyLogger.logInfo("fetch page from resources: " + resourceAsStream);// -> /Users/Sinri/Codes/idea/InfuraOfficeJava/target/classes/
 
+        if (resourceAsStream == null) {
+            output("404 Not Found", 404);
+            return;
+        }
+
         try {
             //BufferedReader br = new BufferedReader(new FileReader(path));
             InputStreamReader x = new InputStreamReader(resourceAsStream);
@@ -179,7 +210,7 @@ abstract public class ExtendedHttpHandler implements HttpHandler {
             while (true) {
                 String line = br.readLine();
                 if (line == null) break;
-                sb.append(line);
+                sb.append(line).append("\n");
             }
             br.close();
             output(sb.toString(), code);
@@ -198,8 +229,8 @@ abstract public class ExtendedHttpHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         this.httpExchange = httpExchange;
-        queryMap = getQueryMap(httpExchange);
-        postMap = getPostMap(httpExchange);
+        readQueryMap(httpExchange);
+        readPostMap(httpExchange);
         session = validateUserSession();
 
         ThyLogger.logInfo("Handling request: " + httpExchange.getRequestURI().getRawPath());
@@ -261,7 +292,6 @@ abstract public class ExtendedHttpHandler implements HttpHandler {
     protected WebSessionAgent.WebSessionEntity validateUserSession() {
         String token = seekPost("token", "");
         WebSessionAgent.WebSessionEntity webSessionEntity = WebSessionAgent.getSharedInstance().validateSession(token);
-        ThyLogger.logDebug("validateUserSession for token " + token + " -> " + webSessionEntity);
         // here might need to set some user validation
         if (webSessionEntity == null || webSessionEntity.getCurrentUser() == null) {
             return null;

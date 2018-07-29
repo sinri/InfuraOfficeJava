@@ -2,10 +2,62 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login - InfuraOffice</title>
-    <script src="../static/main.js"></script>
+    <title>LOGIN - InfuraOffice</title>
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/js.cookie.js"></script>
+    <script src="../static/InfuraOfficeFrontendHelper.js"></script>
+    <!--<script src="../static/iview.min.js"></script>-->
+    <!--<link rel="stylesheet" type="text/css" href="../static/iview.css"/>-->
+    <link rel="stylesheet" type="text/css" href="../static/common.css"/>
 </head>
 <body>
-<h1>Login of Infura Office</h1>
+<div id="app">
+    <h1>Welcome to InfuraOffice!</h1>
+    <div>{{ error_message }}</div>
+    <div>
+        <input type="text" v-model="username" placeholder="Username"/>
+        <input type="password" v-model="password" placeholder="Password"/>
+        <button v-on:click="login">Sign in</button>
+    </div>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            username: '',
+            password: '',
+            is_loading: false,
+            error_message: '',
+        },
+        methods: {
+            login: function () {
+                this.error_message = "Signing in...";
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/session/login",
+                    {
+                        username: this.username,
+                        password: this.password
+                    },
+                    (data) => {
+                        console.log(data);
+                        // sample : {expireTimestamp: 1532903956362, token: "6ee783a49049c5c779247fdd6606820e688"}
+                        CookieHelper.setToken(data.token, this.username, (1532903956362 - (new Date()).getTime()) / 1000);
+                        this.error_message = "Done, redirecting to home page...";
+                        location.href = "home.html";
+                    },
+                    (error) => {
+                        console.log(error);
+                        this.error_message = error;
+                    }
+                )
+            }
+        },
+        mounted: function () {
+            CookieHelper.clearToken();
+        }
+    });
+</script>
 </body>
 </html>

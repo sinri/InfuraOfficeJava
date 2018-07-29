@@ -3,9 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <title>INDEX - InfuraOffice</title>
-    <script src="../static/main.js"></script>
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/js.cookie.js"></script>
+    <script src="../static/InfuraOfficeFrontendHelper.js"></script>
+    <!--<script src="../static/iview.min.js"></script>-->
+    <!--<link rel="stylesheet" type="text/css" href="../static/iview.css"/>-->
+    <link rel="stylesheet" type="text/css" href="../static/common.css"/>
 </head>
 <body>
-<h1>Index of InfuraOffice</h1>
+<div id="app">
+    <h1>Welcome to InfuraOffice!</h1>
+    <div>
+        This project is opened source on <a href="https://github.com/sinri/InfuraOfficeJava">GitHub</a> .
+    </div>
+    <div>
+        <button v-on:click="openLoginPage">Go to sign in page</button>
+    </div>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {},
+        methods: {
+            openLoginPage: function () {
+                location.href = "login.html";
+            }
+        },
+        mounted: function () {
+            if (CookieHelper.isLogin()) {
+                location.href = "home.html";
+            }
+        }
+    });
+</script>
 </body>
 </html>

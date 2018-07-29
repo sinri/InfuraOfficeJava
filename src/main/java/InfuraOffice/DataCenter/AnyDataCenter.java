@@ -22,7 +22,8 @@ abstract public class AnyDataCenter<T extends AnyEntity> {
     protected final String fetchDecryptedJson() throws Exception {
         String file = getDataFile(dataTypeOfT());
         if (!(new File(file)).exists()) {
-            throw new Exception("The data file does not exist, use empty data instead.");
+            ThyLogger.logWarn("The data file does not exist, use empty data instead.");
+            return "{}";
         }
         BufferedReader br = new BufferedReader(new FileReader(file));
         StringBuilder encryptedTextBuilder = new StringBuilder();

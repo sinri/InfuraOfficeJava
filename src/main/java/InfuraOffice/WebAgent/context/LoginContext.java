@@ -22,7 +22,7 @@ public class LoginContext {
                 throw new Exception("User [" + username + "] does not exist");
             }
             if (!userEntity.validatePasswordHash(password)) {
-                throw new Exception("Password Incorrect: " + password);
+                throw new Exception("Password Incorrect!");
             }
             // ok
             WebSessionAgent.WebSessionEntity session = WebSessionAgent.getSharedInstance().createSession(userEntity);
@@ -42,6 +42,8 @@ public class LoginContext {
         protected void realHandler() throws Exception {
             registerDataProperty("token", session.token);
             registerDataProperty("username", session.getCurrentUser().username);
+            registerDataProperty("role", session.getCurrentUser().role);
+            registerDataProperty("privileges", session.getCurrentUser().privileges);
             registerDataProperty("expire", session.expireTimestamp);
             sayOK();
         }
