@@ -2,9 +2,224 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Manage Platform Account - InfuraOffice</title>
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/js.cookie.js"></script>
+    <script src="../static/InfuraOfficeFrontendHelper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/common.css"/>
 </head>
 <body>
-
+<div id="app">
+    <div class="pane" style="border-bottom: 1px solid gray;margin-bottom: 20px">
+        <h1>Manage Platform Account - InfuraOffice</h1>
+        <div class="flexSpaceBetween">
+            <div>
+                <a href="home.html">Back to home page</a>
+            </div>
+            <div>
+                Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
+                <button v-on:click="logout">Sign out</button>
+            </div>
+        </div>
+    </div>
+    <div class="pane" style="text-align: right">
+        <button v-on:click="editPlatform()" class="info">Create New Platform Account</button>
+    </div>
+    <div class="pane">
+        <table style="width: 100%">
+            <tr>
+                <th>Account Name</th>
+                <th>Platform Type</th>
+                <th>Security Key</th>
+                <th>Security Secret</th>
+                <th>Action</th>
+            </tr>
+            <tr v-for="platform in platforms">
+                <td>{{platform.platformName}}</td>
+                <td>{{platform.platformType}}</td>
+                <td>{{platform.securityKey}}</td>
+                <td>{{platform.securitySecret}}</td>
+                <td>
+                    <div class="flexSpaceAround">
+                        <button v-on:click="editPlatform(platform)" class="info">Edit</button>
+                        <button v-on:click="deletePlatform(platform.platformName)" class="warning">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="pane" v-if="showEditPane||showCreatePane">
+        <template v-if="showEditPane">
+            <h2>Edit Platform Account</h2>
+        </template>
+        <template v-if="showCreatePane">
+            <h2>Create Platform Account</h2>
+        </template>
+        <div>
+            <div>
+                <label>Account Name:</label>
+                <template v-if="showEditPane">
+                    <span>{{edit_platform.platformName}}</span>
+                </template>
+                <template v-else>
+                    <input type="text" v-model="edit_platform.platformName">
+                </template>
+            </div>
+            <div>
+                <label>Platform Type:</label>
+                <select v-model="edit_platform.platformType">
+                    <option v-for="item in platform_type_list" :value="item.value">{{item.label}}</option>
+                </select>
+            </div>
+            <div>
+                <label>Security Key:</label>
+                <input type="text" v-model="edit_platform.securityKey">
+            </div>
+            <div>
+                <label>Security Secret:</label>
+                <input type="text" v-model="edit_platform.securitySecret">
+            </div>
+            <div style="text-align: right">
+                <button v-on:click="showEditPane=false;showCreatePane=false;" class="dash">Cancel</button>
+                <button v-on:click="submitModification" class="primary">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            user_info: {
+                privileges: [],
+                role: "",
+                expire: 0,
+                username: '',
+                token: '',
+            },
+            platforms: [],
+            platform_type_list: [
+                {label: 'Aliyun', value: 'aliyun'},
+                {label: 'QCloud', value: 'qcloud'},
+            ],
+            edit_platform: {
+                platformName: "",
+                platformType: "",
+                securityKey: "",
+                securitySecret: "",
+            },
+            showEditPane: false,
+            showCreatePane: false,
+        },
+        methods: {
+            logout: function () {
+                CookieHelper.clearToken();
+                location.href = "login.html";
+            },
+            validateSession: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/session/validate",
+                    {},
+                    (data) => {
+                        this.user_info = data;
+                    },
+                    (error) => {
+                        console.log(error);
+                        alert("Session cannot be validated, you can try to logout and login again.");
+                        this.logout();
+                    }
+                )
+            },
+            listPlatform: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/manage/platform/list",
+                    {},
+                    (data) => {
+                        console.log(data);
+                        this.platforms = data.platforms;
+                    },
+                    (error) => {
+                        console.log(error);
+                    }
+                )
+            },
+            editPlatform: function (platform) {
+                if (platform) {
+                    this.showCreatePane = false;
+                    this.showEditPane = true;
+                    this.edit_platform = {
+                        platformName: platform.platformName,
+                        platformType: platform.platformType,
+                        securityKey: platform.securityKey,
+                        securitySecret: platform.securitySecret,
+                    };
+                } else {
+                    this.showCreatePane = true;
+                    this.showEditPane = false;
+                    this.edit_user = {
+                        platformName: "",
+                        platformType: "",
+                        securityKey: "",
+                        securitySecret: "",
+                    };
+                }
+            },
+            deletePlatform: function (platformName) {
+                if (!confirm("Do you really want to confirm deleting platform account " + platformName + "?")) {
+                    return false;
+                }
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/manage/platform/act",
+                    {
+                        act: "delete",
+                        platformName: platformName
+                    },
+                    (data) => {
+                        alert("Platform account has been deleted!");
+                        this.listPlatform();
+                    },
+                    (error) => {
+                        alert("Failed to delete platform account!");
+                    }
+                )
+            },
+            submitModification: function () {
+                let parameters = {
+                    act: "update",
+                    platformName: this.edit_platform.platformName,
+                    platformType: this.edit_platform.platformType,
+                    securityKey: this.edit_platform.securityKey,
+                    securitySecret: this.edit_platform.securitySecret,
+                };
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/manage/platform/act",
+                    parameters,
+                    (data) => {
+                        this.listPlatform();
+                        this.showCreatePane = false;
+                        this.showEditPane = false;
+                        alert("Modification Accepted!");
+                    },
+                    (error) => {
+                        alert("Call API Failed!");
+                    }
+                )
+            }
+        },
+        mounted: function () {
+            if (!CookieHelper.isLogin()) {
+                location.href = "login.html";
+                return;
+            }
+            this.validateSession();
+            this.listPlatform();
+        }
+    });
+</script>
 </body>
 </html>

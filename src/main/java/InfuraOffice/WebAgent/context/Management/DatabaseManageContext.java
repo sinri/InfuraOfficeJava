@@ -4,7 +4,7 @@ import InfuraOffice.DataCenter.DataCenter;
 import InfuraOffice.DataEntity.DatabaseEntity;
 import InfuraOffice.WebAgent.ExtendedHttpHandler;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class DatabaseManageContext {
@@ -16,8 +16,11 @@ public class DatabaseManageContext {
 
         @Override
         protected void realHandler() throws Exception {
-            HashMap<String, DatabaseEntity> entityHashMap = DataCenter.getSharedInstance().getDatabaseDataCenter().getEntities();
-            registerDataProperty("databases", entityHashMap);
+            ArrayList<DatabaseEntity> list = new ArrayList<>();
+            DataCenter.getSharedInstance().getDatabaseDataCenter().getEntities().forEach((key, entity) -> {
+                list.add(entity);
+            });
+            registerDataProperty("databases", list);
             sayOK();
         }
     }

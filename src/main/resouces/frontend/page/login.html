@@ -41,15 +41,15 @@
                         password: this.password
                     },
                     (data) => {
-                        console.log(data);
+                        console.log("Login API Done", data.token, this.username, (data.expireTimestamp - (new Date()).getTime()) / 1000);
                         // sample : {expireTimestamp: 1532903956362, token: "6ee783a49049c5c779247fdd6606820e688"}
-                        CookieHelper.setToken(data.token, this.username, (1532903956362 - (new Date()).getTime()) / 1000);
+                        CookieHelper.setToken(data.token, this.username, (data.expireTimestamp - (new Date()).getTime()) / 1000);
                         this.error_message = "Done, redirecting to home page...";
                         location.href = "home.html";
                     },
                     (error) => {
                         console.log(error);
-                        this.error_message = error;
+                        this.error_message = "Mistake: " + error;
                     }
                 )
             }

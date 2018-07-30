@@ -4,7 +4,7 @@ import InfuraOffice.DataCenter.DataCenter;
 import InfuraOffice.DataEntity.PlatformEntity;
 import InfuraOffice.WebAgent.ExtendedHttpHandler;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class PlatformManageContext {
@@ -16,8 +16,11 @@ public class PlatformManageContext {
 
         @Override
         protected void realHandler() throws Exception {
-            HashMap<String, PlatformEntity> platformEntityHashMap = DataCenter.getSharedInstance().getPlatformDataCenter().getEntities();
-            registerDataProperty("platforms", platformEntityHashMap);
+            ArrayList<PlatformEntity> list = new ArrayList<>();
+            DataCenter.getSharedInstance().getPlatformDataCenter().getEntities().forEach((key, entity) -> {
+                list.add(entity);
+            });
+            registerDataProperty("platforms", list);
             sayOK();
         }
     }

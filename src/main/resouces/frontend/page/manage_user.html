@@ -11,33 +11,34 @@
 </head>
 <body>
 <div id="app">
-    <div>
+    <div class="pane" style="border-bottom: 1px solid gray;margin-bottom: 20px">
         <h1>Manage User - InfuraOffice</h1>
-        <div>
-            <p>
+        <div class="flexSpaceBetween">
+            <div>
+                <a href="home.html">Back to home page</a>
+            </div>
+            <div>
                 Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
                 <button v-on:click="logout">Sign out</button>
-            </p>
-            <p>
-                <a href="home.html">Back to home page</a>
-            </p>
+            </div>
         </div>
     </div>
-    <div>
-        <table>
+    <div class="pane" style="text-align: right">
+        <button v-on:click="editUser()" class="info">Create New User</button>
+    </div>
+    <div class="pane">
+        <table style="width: 100%">
             <tr>
                 <th>Username</th>
                 <th>Role</th>
-                <th>Privileges</th>
+                <!--<th>Privileges</th>-->
                 <th>Last Login</th>
                 <th>Act</th>
             </tr>
             <tr v-for="user in users">
                 <td>{{user.username}}</td>
                 <td>{{user.role}}</td>
-                <td>
-                    {{user.privileges.join(",")}}
-                </td>
+                <!--<td>{{user.privileges.join(",")}}</td>-->
                 <td>
                     <template v-if="user.lastLoginTimestamp>0">
                         From {{user.lastLoginIP}} on {{new Date(user.lastLoginTimestamp).toLocaleString('ja')}}
@@ -47,10 +48,45 @@
                     </template>
                 </td>
                 <td>
-                    ...
+                    <div class="flexSpaceAround">
+                        <button v-on:click="editUser(user)" class="info">Edit</button>
+                        <button v-on:click="deleteUser(user.username)" class="warning">Delete</button>
+                    </div>
                 </td>
             </tr>
         </table>
+    </div>
+    <div class="pane" v-if="showEditPane||showCreatePane" style="border: 1px solid lightgray">
+        <template v-if="showEditPane">
+            <h2>Edit User</h2>
+        </template>
+        <template v-if="showCreatePane">
+            <h2>Create User</h2>
+        </template>
+        <div>
+            <label>Username:</label>
+            <template v-if="showEditPane">
+                <span>{{edit_user.username}}</span>
+            </template>
+            <template v-else>
+                <input type="text" v-model="edit_user.username">
+            </template>
+        </div>
+        <div>
+            <label>Role:</label>
+            <select v-model="edit_user.role">
+                <option v-for="role_item in role_list" :value="role_item.value">{{role_item.label}}</option>
+            </select>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="password" v-model="edit_user.password">
+            <span v-if="showEditPane">Leave password as empty to keep it original.</span>
+        </div>
+        <div style="text-align: right">
+            <button v-on:click="showEditPane=false;showCreatePane=false;" class="dash">Cancel</button>
+            <button v-on:click="submitModification" class="primary">Update</button>
+        </div>
     </div>
 </div>
 <script>
@@ -64,7 +100,19 @@
                 username: '',
                 token: '',
             },
-            users: []
+            users: [],
+            showEditPane: false,
+            showCreatePane: false,
+            role_list: [
+                {label: "ADMIN", value: "ADMIN"},
+                {label: "USER", value: "USER"}
+            ],
+            edit_user: {
+                privileges: [],
+                role: "USER",
+                password: '',
+                username: ''
+            }
         },
         methods: {
             logout: function () {
@@ -98,6 +146,78 @@
                     (error) => {
                         console.log(error);
                         alert("Cannot fetch user list");
+                    }
+                )
+            },
+            deleteUser: function (username) {
+                if (!confirm("Do you really want to confirm deleting user " + username + "?")) {
+                    return false;
+                }
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/manage/user/act",
+                    {
+                        act: "delete",
+                        username: username
+                    },
+                    (data) => {
+                        alert("User has been deleted!");
+                        this.listUsers();
+                    },
+                    (error) => {
+                        alert("Failed to delete user!");
+                    }
+                )
+            },
+            editUser: function (user) {
+                if (user) {
+                    this.showCreatePane = false;
+                    this.showEditPane = true;
+                    this.edit_user = {
+                        privileges: user.privileges,
+                        role: user.role,
+                        username: user.username,
+                        password: ""
+                    };
+                } else {
+                    this.showCreatePane = true;
+                    this.showEditPane = false;
+                    this.edit_user = {
+                        privileges: [],
+                        role: "USER",
+                        username: "",
+                        password: ""
+                    };
+                }
+            },
+            submitModification: function () {
+                let parameters = {
+                    act: "update",
+                    username: this.edit_user.username,
+                    role: this.edit_user.role,
+                    privileges: this.edit_user.privileges.join(",")
+                };
+                if (this.edit_user.password.length > 0) {
+                    parameters.password = this.edit_user.password;
+                }
+                if (this.showCreatePane) {
+                    if (!(parameters.username.length > 0 && parameters.password.length > 0)) {
+                        alert("Input error!");
+                        return false;
+                    }
+                }
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/manage/user/act",
+                    parameters,
+                    (data) => {
+                        this.showCreatePane = false;
+                        this.showEditPane = false;
+                        this.listUsers();
+                        alert("Modification Accepted");
+                    },
+                    (error) => {
+                        alert("Failed to call API!");
                     }
                 )
             }

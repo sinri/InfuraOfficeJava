@@ -2,8 +2,29 @@
     margin: 10px;
 }
 
+.flexSpaceBetween {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.flexSpaceAround {
+    display: flex;
+    justify-content: space-around;
+    align-items: baseline;
+}
+
 div {
     font-size: 14px;
+}
+
+div.pane {
+    margin: 5px;
+    width: 100%;
+}
+
+div.pane div {
+    margin: 5px;
 }
 
 table {
@@ -15,7 +36,78 @@ table th {
 }
 
 table th, td {
-    padding: 5px;
+    padding: 10px;
     border: 1px solid lightgray;
     font-size: 14px;
+    text-align: center;
+}
+
+button {
+    padding: 5px;
+    border: 1px solid gray;
+    border-radius: 5px;
+    background: white;
+}
+
+button.dash {
+    padding: 5px;
+    border: 1px dashed gray;
+    border-radius: 5px;
+    background: white;
+}
+
+button.text {
+    padding: 5px;
+    border: none;
+    border-radius: 5px;
+    background: white;
+}
+
+button.primary {
+    background: #2d8cf0;
+    color: white;
+    border: none;
+}
+
+button.light-primary {
+    background: #5cadff;
+    color: white;
+    border: none;
+}
+
+button.dark-primary {
+    background: #2b85e4;
+    color: white;
+    border: none;
+}
+
+button.info {
+    background: #2db7f5;
+    color: white;
+    border: none;
+}
+
+button.success {
+    background: #19be6b;
+    color: white;
+    border: none;
+}
+
+button.warning {
+    background: #ff9900;
+    color: white;
+    border: none;
+}
+
+button.error {
+    background: #ed4014;
+    color: white;
+    border: none;
+}
+
+label {
+    width: 100px;
+    display: inline-block;
+    text-align: right;
+    margin-right: 10px;
 }
