@@ -1,6 +1,7 @@
 package InfuraOffice.WebAgent;
 
 import InfuraOffice.ThyLogger;
+import InfuraOffice.WebAgent.context.EntityQueryContext;
 import InfuraOffice.WebAgent.context.HomeContext;
 import InfuraOffice.WebAgent.context.LoginContext;
 import InfuraOffice.WebAgent.context.Maintain.RemoteTaskContext;
@@ -93,5 +94,13 @@ public class WebAgent {
         server.createContext("/api/maintain/task/info", new RemoteTaskContext.RequireCommandTaskOnServersHandler());
         // run command on server
         server.createContext("/api/maintain/server/command", new ServerMaintainContext.RequireCommandTaskOnServersHandler());
+
+        // PART IV: FETCH OPTIONS
+
+        server.createContext("/api/query/user", new EntityQueryContext.FetchUserOptionsHandler());
+        server.createContext("/api/query/platform", new EntityQueryContext.FetchPlatformOptionsHandler());
+        server.createContext("/api/query/server", new EntityQueryContext.FetchServerOptionsHandler());
+        server.createContext("/api/query/servergroup", new EntityQueryContext.FetchServerGroupOptionsHandler());
+        server.createContext("/api/query/database", new EntityQueryContext.FetchDatabaseOptionsHandler());
     }
 }

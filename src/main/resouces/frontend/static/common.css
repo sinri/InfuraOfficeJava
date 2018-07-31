@@ -27,6 +27,11 @@ div.pane div {
     margin: 5px;
 }
 
+div.headBanner {
+    border-bottom: 1px solid gray;
+    margin-bottom: 20px;
+}
+
 table {
     border-collapse: collapse;
 }
@@ -106,7 +111,7 @@ button.error {
 }
 
 label {
-    width: 100px;
+    width: 150px;
     display: inline-block;
     text-align: right;
     margin-right: 10px;

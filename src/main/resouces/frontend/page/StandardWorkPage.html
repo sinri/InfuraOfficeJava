@@ -11,18 +11,15 @@
 </head>
 <body>
 <div id="app">
-    <div>
-        <h1>XXX - InfuraOffice</h1>
-        <div class="pane" style="border-bottom: 1px solid gray;margin-bottom: 20px">
-            <h1>Manage User - InfuraOffice</h1>
-            <div class="flexSpaceBetween">
-                <div>
-                    <a href="home.html">Back to home page</a>
-                </div>
-                <div>
-                    Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
-                    <button v-on:click="logout">Sign out</button>
-                </div>
+    <div class="pane headBanner">
+        <h1>Manage User - InfuraOffice</h1>
+        <div class="flexSpaceBetween">
+            <div>
+                <a href="home.html">Back to home page</a>
+            </div>
+            <div>
+                Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
+                <button v-on:click="logout">Sign out</button>
             </div>
         </div>
     </div>
