@@ -66,7 +66,7 @@ public class ServerGroupManageContext {
                     }
                     serverGroupEntity.servers = new HashSet<>();
                     String serverNames = seekPost("serverNames", "");
-                    String[] split = serverNames.split(",");
+                    String[] split = serverNames.split("[\r\n]+");
                     for (String serverName : split) {
                         if (serverName.trim().length() > 0) serverGroupEntity.servers.add(serverName.trim());
                     }
