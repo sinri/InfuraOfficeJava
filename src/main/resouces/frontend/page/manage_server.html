@@ -87,7 +87,7 @@
             </select>
         </div>
         <div>
-            <label>areaCode:</label>
+            <label>Area Code:</label>
             <select v-model="edit_server.areaCode">
                 <optgroup v-for="(area_list,platform_type) in areaCodeOptions" :label="platform_type">
                     <option v-for="item in area_list" :value="item.key">{{item.label}}</option>
@@ -95,7 +95,7 @@
             </select>
         </div>
         <div>
-            <label>assertID</label>
+            <label>Assert ID</label>
             <input type="text" v-model="edit_server.assertID">
         </div>
         <div>

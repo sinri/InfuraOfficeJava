@@ -67,6 +67,8 @@ public class DatabaseManageContext {
                     databaseEntity.port = Integer.parseInt(seekPost("port", "-1"));
                     databaseEntity.host = seekPost("host", "");
                     databaseEntity.type = seekPost("type", "");
+
+                    DataCenter.getSharedInstance().getDatabaseDataCenter().updateEntityWithKey(databaseEntity.databaseName, databaseEntity);
                     break;
                 case "update_account":
                     if (databaseEntity == null) throw new Exception("database does not exist");

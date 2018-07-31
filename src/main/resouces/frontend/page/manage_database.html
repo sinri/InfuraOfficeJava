@@ -2,9 +2,426 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Manage Databases - InfuraOffice</title>
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/js.cookie.js"></script>
+    <script src="../static/InfuraOfficeFrontendHelper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/common.css"/>
 </head>
 <body>
+<div id="app">
+    <div class="pane headBanner">
+        <h1>Manage Databases - InfuraOffice</h1>
+        <div class="flexSpaceBetween">
+            <div>
+                <a href="home.html">Back to home page</a>
+            </div>
+            <div>
+                Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
+                <button v-on:click="logout">Sign out</button>
+            </div>
+        </div>
+    </div>
+    <div class="pane" style="text-align: right">
+        <button v-on:click="editDatabase()" class="info">Create New Database</button>
+    </div>
+    <div class="pane">
+        <table style="width: 100%">
+            <tr>
+                <th>Database Name</th>
+                <th>Platform Name</th>
+                <th>Engine Type</th>
+                <th>Host</th>
+                <th>Port</th>
+                <th>Port in Dothan</th>
+                <th>Accounts</th>
+                <th>Action</th>
+            </tr>
+            <tr v-for="database in databases">
+                <td>{{database.databaseName}}</td>
+                <td>{{database.platformName}}</td>
+                <td>{{database.type}}</td>
+                <td>{{database.host}}</td>
+                <td>{{database.port}}</td>
+                <td>{{database.portInDothan}}</td>
+                <td>{{database.accounts}}</td>
+                <td>
+                    <div class="flexSpaceAround">
+                        <button v-on:click="editDatabase(database)" class="info">Edit</button>
+                        <button v-on:click="editDatabaseAccounts(database)" class="info">Users</button>
+                        <button v-on:click="deleteDatabase(database.databaseName)" class="warning">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="pane" v-if="showEditPane||showCreatePane">
+        <template v-if="showEditPane">
+            <h2>Edit Database</h2>
+        </template>
+        <template v-if="showCreatePane">
+            <h2>Create Database</h2>
+        </template>
+        <div>
+            <label>Database Name:</label>
+            <template v-if="showCreatePane">
+                <input type="text" v-model="edit_database.databaseName"/>
+            </template>
+            <template v-else>
+                <span>{{edit_database.databaseName}}</span>
+            </template>
+        </div>
+        <div>
+            <label>Platform Account:</label>
+            <select v-model="edit_database.platformName">
+                <option value="">[Standalone]</option>
+                <option v-for="platform in platformOptions" :value="platform.platformName">
+                    {{platform.platformName}} - {{platform.platformType}}
+                </option>
+            </select>
+        </div>
+        <div>
+            <label>Area Code:</label>
+            <select v-model="edit_database.areaCode">
+                <optgroup v-for="(area_list,platform_type) in areaCodeOptions" :label="platform_type">
+                    <option v-for="item in area_list" :value="item.key">{{item.label}}</option>
+                </optgroup>
+            </select>
+        </div>
+        <div>
+            <label>Assert ID</label>
+            <input type="text" v-model="edit_database.assertID">
+        </div>
+        <div>
+            <label>Engine Type:</label>
+            <select v-model="edit_database.type">
+                <option v-for="item in databaseTypeOptions" :value="item.key">{{item.label}}</option>
+            </select>
+        </div>
+        <div>
+            <label>Host:</label>
+            <input type="text" v-model="edit_database.host">
+        </div>
+        <div>
+            <label>Port:</label>
+            <input type="text" v-model="edit_database.port">
+        </div>
+        <div>
+            <label>Port in Dothan:</label>
+            <input type="text" v-model="edit_database.portInDothan">
+        </div>
+        <div style="text-align: right">
+            <button v-on:click="showEditPane=false;showCreatePane=false;" class="dash">Cancel</button>
+            <button v-on:click="submitModification" class="primary">Update</button>
+        </div>
+    </div>
+    <div class="pane" v-if="showAccountPane">
+        <h2>Edit Accounts of Database</h2>
+        <div>
+            <label>Database Name:</label>
+            <span>{{edit_database_account.databaseName}}</span>
+        </div>
+        <div>
+            <label>
+                Add Accounts:
+            </label>
+            <div>
+                <label>Username:</label>
+                <input type="text" v-model="edit_database_account.temp_account.username">
+                <label>Password:</label>
+                <input type="text" v-model="edit_database_account.temp_account.password">
+                <label></label>
+                <button v-on:click="appendTempAccount(-1)">Add</button>
+            </div>
+        </div>
+        <div>
+            <label>
+                Existed Accounts:
+            </label>
+            <div v-for="(account,index) in edit_database_account.accounts">
+                <label>Username:</label>
+                <input type="text" v-model="account.username">
+                <label>Password:</label>
+                <input type="text" v-model="account.password">
+                <label></label>
+                <button v-on:click="appendTempAccount(index)">Update</button>
+                <button v-on:click="removeAccountFromList(index)">Remove</button>
+            </div>
+        </div>
+        <div style="text-align: right">
+            <button v-on:click="showAccountPane=false;" class="dash">Close</button>
+        </div>
+    </div>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            user_info: {
+                privileges: [],
+                role: "",
+                expire: 0,
+                username: '',
+                token: '',
+            },
+            databases: [],
+            databaseTypeOptions: [
+                {label: 'MySQL', key: 'mysql'}
+            ],
+            platformOptions: [],
+            areaCodeOptions: [],
+            edit_database: {
+                databaseName: '',
+                platformName: '',
+                areaCode: '',
+                assertID: '',
+                portInDothan: '',
+                port: '',
+                host: '',
+                type: '',
+            },
+            edit_database_account: {
+                databaseName: '',
+                accounts: [],
+                temp_account: {
+                    username: '',
+                    password: ''
+                }
+            },
+            showEditPane: false,
+            showCreatePane: false,
+            showAccountPane: false,
+        },
+        methods: {
+            logout: function () {
+                CookieHelper.clearToken();
+                location.href = "login.html";
+            },
+            validateSession: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/session/validate",
+                    {},
+                    (data) => {
+                        this.user_info = data;
+                    },
+                    (error) => {
+                        console.log(error);
+                        alert("Session cannot be validated, you can try to logout and login again.");
+                        this.logout();
+                    }
+                )
+            },
+            listPlatformOptions: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/query/platform",
+                    {},
+                    (data) => {
+                        console.log("listPlatformOptions", data);
+                        this.platformOptions = data.options;
+                    },
+                    (error) => {
+                        console.log("listPlatformOptions error", error);
+                    }
+                )
+            },
+            listDatabases: function (callback) {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/manage/database/list",
+                    {},
+                    (data) => {
+                        console.log(data);
+                        this.databases = data.databases;
+                        if (callback) {
+                            callback();
+                        }
+                    },
+                    (error) => {
+                        console.log(error);
+                        alert("cannot fetch database list. " + error);
+                    }
+                )
+            },
+            editDatabaseAccounts: function (database) {
+                this.edit_database_account = {
+                    databaseName: database.databaseName,
+                    accounts: [],
+                    temp_account: {
+                        username: '',
+                        password: ''
+                    }
+                };
+                console.log(database.accounts);
+                for (let key in database.accounts) {
+                    if (database.accounts.hasOwnProperty(key)) {
+                        this.edit_database_account.accounts.push({
+                            username: key,
+                            password: database.accounts[key]
+                        });
+                    }
+                }
+                this.showAccountPane = true;
+            },
+            refreshEditDatabaseAccounts: function (databaseName) {
+                for (let i = 0; i < this.databases.length; i++) {
+                    if (this.databases[i].databaseName === databaseName) {
+                        this.editDatabaseAccounts(this.databases[i]);
+                        return;
+                    }
+                }
+            },
+            editDatabase: function (database) {
+                if (database) {
+                    this.showCreatePane = false;
+                    this.showEditPane = true;
+                    this.edit_database = {
+                        databaseName: database.databaseName,
+                        platformName: database.platformName,
+                        areaCode: database.areaCode,
+                        assertID: database.assertID,
+                        portInDothan: database.portInDothan,
+                        port: database.port,
+                        host: database.host,
+                        type: database.type,
+                    };
+                } else {
+                    this.showCreatePane = true;
+                    this.showEditPane = false;
+                    this.edit_database = {
+                        databaseName: '',
+                        platformName: '',
+                        areaCode: '',
+                        assertID: '',
+                        portInDothan: '',
+                        port: '3306',
+                        host: '',
+                        type: 'mysql',
+                    };
+                }
+            },
+            submitModification: function () {
+                let parameters = {
+                    act: 'update',
+                    databaseName: this.edit_database.databaseName,
+                    platformName: this.edit_database.platformName,
+                    areaCode: this.edit_database.areaCode,
+                    assertID: this.edit_database.assertID,
+                    portInDothan: this.edit_database.portInDothan ? this.edit_database.portInDothan : '-1',
+                    port: this.edit_database.port ? this.edit_database.port : '3306',
+                    host: this.edit_database.host,
+                    type: this.edit_database.type,
+                };
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/manage/database/act",
+                    parameters,
+                    (data) => {
+                        this.listDatabases();
+                        this.showCreatePane = false;
+                        this.showEditPane = false;
+                        alert("Modification Accepted!");
+                    },
+                    (error) => {
+                        alert("Failed to call api. " + error);
+                    }
+                )
+            },
+            deleteDatabase: function (databaseName) {
+                if (!confirm("Do you really want to confirm deleting database " + databaseName + "?")) {
+                    return false;
+                }
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/manage/database/act",
+                    {
+                        act: "delete",
+                        databaseName: databaseName
+                    },
+                    (data) => {
+                        alert("Database has been deleted!");
+                        this.listDatabases();
+                    },
+                    (error) => {
+                        alert("Failed to delete database!");
+                    }
+                )
+            },
+            appendTempAccount: function (index) {
+                let parameters = {
+                    act: 'update_account',
+                    databaseName: this.edit_database_account.databaseName,
+                    username: this.edit_database_account.temp_account.username,
+                    password: this.edit_database_account.temp_account.password,
+                };
+                console.log("appendTempAccount", index);
+                if (index >= 0) {
+                    parameters.username = this.edit_database_account.accounts[index].username;
+                    parameters.password = this.edit_database_account.accounts[index].password;
+                }
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/manage/database/act",
+                    parameters,
+                    (data) => {
+                        alert("Done");
+                        if (index < 0) {
+                            this.edit_database_account.accounts.push(
+                                {
+                                    username: this.edit_database_account.temp_account.username,
+                                    password: this.edit_database_account.temp_account.password,
+                                }
+                            );
+                            this.edit_database_account.temp_account.username = '';
+                            this.edit_database_account.temp_account.password = '';
+                        }
+                        this.listDatabases(() => {
+                            this.refreshEditDatabaseAccounts(this.edit_database_account.databaseName);
+                        });
+                    },
+                    (error) => {
+                        alert("Failed");
+                    }
+                )
+            },
+            removeAccountFromList: function (index) {
+                let parameters = {
+                    act: 'remove_account',
+                    databaseName: this.edit_database_account.databaseName,
+                    username: this.edit_database_account.accounts[index].username,
+                    password: this.edit_database_account.accounts[index].password,
+                };
 
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/manage/database/act",
+                    parameters,
+                    (data) => {
+                        alert("Done");
+                        this.edit_database_account.accounts.splice(index, 1);
+                        this.listDatabases(() => {
+                            this.refreshEditDatabaseAccounts(this.edit_database_account.databaseName);
+                        });
+                    },
+                    (error) => {
+                        alert("Failed");
+                    }
+                )
+            },
+        },
+        mounted: function () {
+            if (!CookieHelper.isLogin()) {
+                location.href = "login.html";
+                return;
+            }
+            this.validateSession();
+            this.listPlatformOptions();
+            this.areaCodeOptions = allPlatformAreaCodeOptions();
+            this.listDatabases();
+        }
+    });
+</script>
 </body>
 </html>
