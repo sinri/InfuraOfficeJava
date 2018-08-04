@@ -239,7 +239,7 @@ abstract public class ExtendedHttpHandler implements HttpHandler {
             output("401 - No Valid Session!", 401);
             return;
         }
-        // check valid session for role and privilege limitation
+        // check valid session for role and privilege limitation, but ADMIN can do anything
         if (session != null && !session.getCurrentUser().role.equals(UserEntity.ROLE_ADMIN)) {
             Set<String> rolesRequired = rolesRequired();
             if (session != null && rolesRequired != null) {

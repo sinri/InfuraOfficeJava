@@ -11,13 +11,16 @@
 </head>
 <body>
 <div id="app">
-    <div>
+    <div class="pane headBanner">
         <h1>Home - InfuraOffice</h1>
-        <div>
-            <p>
+        <div class="flexSpaceBetween">
+            <div>
+                <!--<a href="home.html">Back to home page</a>-->
+            </div>
+            <div>
                 Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
                 <button v-on:click="logout">Sign out</button>
-            </p>
+            </div>
         </div>
     </div>
     <div if="user_info.role='ADMIN'">
@@ -47,6 +50,7 @@
         <div>
             <ul>
                 <li><a href="maintain_server.html">Maintain Server</a></li>
+                <li><a href="maintain_database.html">Maintain Database</a></li>
             </ul>
         </div>
     </div>

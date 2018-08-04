@@ -4,6 +4,7 @@ import InfuraOffice.ThyLogger;
 import InfuraOffice.WebAgent.context.EntityQueryContext;
 import InfuraOffice.WebAgent.context.HomeContext;
 import InfuraOffice.WebAgent.context.LoginContext;
+import InfuraOffice.WebAgent.context.Maintain.DatabaseMaintainContext;
 import InfuraOffice.WebAgent.context.Maintain.RemoteTaskContext;
 import InfuraOffice.WebAgent.context.Maintain.ServerMaintainContext;
 import InfuraOffice.WebAgent.context.Management.*;
@@ -95,6 +96,10 @@ public class WebAgent {
         server.createContext("/api/maintain/task/info", new RemoteTaskContext.RequireCommandTaskOnServersHandler());
         // run command on server
         server.createContext("/api/maintain/server/command", new ServerMaintainContext.RequireCommandTaskOnServersHandler());
+        // show full processlist on database
+        server.createContext("/api/maintain/database/processes", new DatabaseMaintainContext.DatabaseProcessListHandler());
+        // kill process on database
+        server.createContext("/api/maintain/database/kill", new DatabaseMaintainContext.DatabaseKillHandler());
 
         // PART IV: FETCH OPTIONS
 

@@ -35,7 +35,6 @@
                 <th>Host</th>
                 <th>Port</th>
                 <th>Port in Dothan</th>
-                <th>Accounts</th>
                 <th>Action</th>
             </tr>
             <tr v-for="database in databases">
@@ -45,7 +44,6 @@
                 <td>{{database.host}}</td>
                 <td>{{database.port}}</td>
                 <td>{{database.portInDothan}}</td>
-                <td>{{database.accounts}}</td>
                 <td>
                     <div class="flexSpaceAround">
                         <button v-on:click="editDatabase(database)" class="info">Edit</button>

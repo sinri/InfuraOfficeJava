@@ -78,6 +78,7 @@ public class DatabaseManageContext {
                         throw new Exception("database account info error");
                     }
                     databaseEntity.accounts.put(username, password);
+                    DataCenter.getSharedInstance().getDatabaseDataCenter().updateEntityWithKey(databaseEntity.databaseName, databaseEntity);
                     break;
                 case "remove_account":
                     if (databaseEntity == null) throw new Exception("database does not exist");
@@ -86,6 +87,7 @@ public class DatabaseManageContext {
                         throw new Exception("Username Empty or Deleted");
                     }
                     databaseEntity.accounts.remove(usernameToRemove);
+                    DataCenter.getSharedInstance().getDatabaseDataCenter().updateEntityWithKey(databaseEntity.databaseName, databaseEntity);
                     break;
                 default:
                     throw new Exception("Unknown act");

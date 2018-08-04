@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Maintain Database - InfuraOffice</title>
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/js.cookie.js"></script>
+    <script src="../static/InfuraOfficeFrontendHelper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/common.css"/>
+</head>
+<body>
+<div id="app">
+    <div class="pane headBanner">
+        <h1>Maintain Database - InfuraOffice</h1>
+        <div class="flexSpaceBetween">
+            <div>
+                <a href="home.html">Back to home page</a>
+            </div>
+            <div>
+                Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
+                <button v-on:click="logout">Sign out</button>
+            </div>
+        </div>
+    </div>
+    <div class="pane headBanner">
+        <div>
+            <label>Database:</label>
+            <select style="width: 150px" v-model="target_database_name">
+                <option v-for="item in databaseOptions" :value="item.databaseName">{{item.databaseName}}</option>
+            </select>
+            <label style="width: 50px">&nbsp;</label>
+            <button class="info" v-on:click="loadProcessList">Show Full Process List</button>
+        </div>
+    </div>
+    <div class="pane">
+        <table style="width:100%">
+            <tr>
+                <th>Host</th>
+                <th>Id</th>
+                <th>User</th>
+                <th>State</th>
+                <th>Command</th>
+                <th>Time</th>
+                <th>Info</th>
+                <th>Action</th>
+            </tr>
+            <tr v-for="item in process_list">
+                <td>{{item.Host}}</td>
+                <td>{{item.Id}}</td>
+                <td>{{item.User}}</td>
+                <td>{{item.State}}</td>
+                <td>{{item.Command}}</td>
+                <td>{{item.Time}}</td>
+                <td>{{item.Info}}</td>
+                <td>
+                    <button class="error" v-on:click="callKillProcess(item)">KILL</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            user_info: {
+                privileges: [],
+                role: "",
+                expire: 0,
+                username: '',
+                token: '',
+            },
+            databaseOptions: [],
+            target_database_name: '',
+            process_list: [],
+        },
+        methods: {
+            logout: function () {
+                CookieHelper.clearToken();
+                location.href = "login.html";
+            },
+            validateSession: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/session/validate",
+                    {},
+                    (data) => {
+                        this.user_info = data;
+                    },
+                    (error) => {
+                        console.log(error);
+                        alert("Session cannot be validated, you can try to logout and login again.");
+                        this.logout();
+                    }
+                )
+            },
+            loadDatabaseOptions: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/query/database",
+                    {},
+                    (data) => {
+                        console.log(data);
+                        this.databaseOptions = data.options;
+                    },
+                    (error) => {
+                        alert("Cannot fetch databases. " + error);
+                    }
+                )
+            },
+            loadProcessList: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/maintain/database/processes",
+                    {
+                        databaseName: this.target_database_name,
+                    },
+                    (data) => {
+                        console.log("show full processlist", data);
+                        this.process_list = data.list;
+                    },
+                    (error) => {
+                        alert("Cannot get full process list. " + error);
+                    }
+                )
+            },
+            callKillProcess: function (process) {
+                console.log("callKillProcess", process);
+                let username = process.User;
+                let id = process.Id;
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/maintain/database/kill",
+                    {
+                        databaseName: this.target_database_name,
+                        username: username,
+                        id: id,
+                    },
+                    (data) => {
+                        console.log("callKillProcess get data", data);
+                        if (data.killed) {
+                            alert("Process Killed " + id);
+                        } else {
+                            alert("Kill " + id + " Failed");
+                        }
+                    },
+                    (error) => {
+                        alert("Failed in killing " + error);
+                    }
+                )
+            }
+        },
+        mounted: function () {
+            if (!CookieHelper.isLogin()) {
+                location.href = "login.html";
+                return;
+            }
+            this.validateSession();
+            this.loadDatabaseOptions();
+        }
+    });
+</script>
+</body>
+</html>
