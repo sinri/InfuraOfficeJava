@@ -3,6 +3,7 @@ package InfuraOffice.WebAgent;
 import InfuraOffice.ThyLogger;
 import InfuraOffice.WebAgent.context.EntityQueryContext;
 import InfuraOffice.WebAgent.context.HomeContext;
+import InfuraOffice.WebAgent.context.Job.JobContext;
 import InfuraOffice.WebAgent.context.LoginContext;
 import InfuraOffice.WebAgent.context.Maintain.DatabaseMaintainContext;
 import InfuraOffice.WebAgent.context.Maintain.RemoteTaskContext;
@@ -114,5 +115,9 @@ public class WebAgent {
         server.createContext("/api/slk/files", new SLKContext.FetchLogFileListTaskHandler());
         server.createContext("/api/slk/filesize", new SLKContext.SyncFetchLogFileSizeTaskHandler());
         server.createContext("/api/slk/search", new SLKContext.FetchLogContentTaskHandler());
+
+        // PART VI: JOB
+        server.createContext("/api/job/servermainjob/list", new JobContext.ServerMainJobListHandler());
+
     }
 }

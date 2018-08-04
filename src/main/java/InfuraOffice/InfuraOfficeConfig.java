@@ -17,10 +17,10 @@ public class InfuraOfficeConfig {
 
     static {
         logLevelArray = new ArrayList<>();
-        logLevelArray.add("DEBUG");
-        logLevelArray.add("INFO");
-        logLevelArray.add("WARN");
-        logLevelArray.add("ERROR");
+        logLevelArray.add(InfuraOfficeConfig.LOG_LEVEL_DEBUG);
+        logLevelArray.add(InfuraOfficeConfig.LOG_LEVEL_INFO);
+        logLevelArray.add(InfuraOfficeConfig.LOG_LEVEL_WARN);
+        logLevelArray.add(InfuraOfficeConfig.LOG_LEVEL_ERROR);
 
         instance = new InfuraOfficeConfig();
     }
@@ -56,6 +56,7 @@ public class InfuraOfficeConfig {
     public int httpListenPort;
     public int remoteAgentMaxWorker;
     public String runtimeDir;
+    public String jobLogDir;
 
     protected InfuraOfficeConfig() {
         httpListenPort = 8080;
@@ -63,6 +64,7 @@ public class InfuraOfficeConfig {
         privateKeyPath = "~/.ssh/id_rsa";
         remoteAgentMaxWorker = 3;
         runtimeDir = "/opt/InfuraOffice/runtime";
+        jobLogDir = "/var/log/InfuraOfficeJob";
     }
 
     public void writeIntoConfigFile(String configFile) throws IOException {

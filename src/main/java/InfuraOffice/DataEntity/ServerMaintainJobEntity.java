@@ -1,11 +1,17 @@
 package InfuraOffice.DataEntity;
 
+import InfuraOffice.DataCenter.DataCenter;
+import InfuraOffice.FileLogger;
+import InfuraOffice.InfuraOfficeConfig;
+import InfuraOffice.RemoteAgent.SSHAgent;
 import InfuraOffice.ScheduleAgent.CronJob.ServerMaintainJob;
 import InfuraOffice.ScheduleAgent.ScheduleAgent;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.quartz.SchedulerException;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -44,22 +50,47 @@ public class ServerMaintainJobEntity extends AnyEntity {
 
     public void registerToScheduler() throws SchedulerException {
         HashMap<String, String> parameters = new HashMap<>();
-
-//        StringBuilder groups=new StringBuilder();
-//        serverGroupNames.forEach(groups::append);
-//        StringBuilder servers=new StringBuilder();
-//        serverNames.forEach(servers::append);
-
         parameters.put("cronJobName", cronJobName);
-        //parameters.put("serverGroupNames",groups.toString());
-        //parameters.put("serverNames",servers.toString());
-        //parameters.put("type",type);
-        //parameters.put("command",command);
-
         ScheduleAgent.scheduleOneCronJob("ServerMaintainJobs", cronJobName, cronExpression, ServerMaintainJob.class, parameters);
     }
 
     public void execute() {
-        // TODO remote job
+        try {
+            FileLogger fileLogger = new FileLogger(InfuraOfficeConfig.getSharedInstance().jobLogDir + "/" + this.cronJobName + "_" + (new SimpleDateFormat("yyyy-MM-dd").format(new Date())));
+
+            HashSet<String> involvedServerNames = new HashSet<>();
+            serverGroupNames.forEach(serverGroupName -> {
+                try {
+                    ServerGroupEntity serverGroupEntity = DataCenter.getSharedInstance().getServerGroupDataCenter().getEntityWithKey(serverGroupName);
+                    involvedServerNames.addAll(serverGroupEntity.servers);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            involvedServerNames.addAll(serverNames);
+
+            involvedServerNames.forEach(serverName -> {
+                try {
+                    fileLogger.logInfo("ServerMaintainJob " + cronJobName + " Executed on " + serverName);
+
+                    if (!active) throw new Exception("This job is not active, stop here.");
+
+                    ServerEntity serverEntity = DataCenter.getSharedInstance().getServerDataCenter().getEntityWithKey(serverName);
+                    SSHAgent agent = new SSHAgent();
+                    int returnValue = agent.executeCommandOnRemote(serverEntity.connectAddress, serverEntity.sshPort, serverEntity.sshUser, command);
+
+                    fileLogger.logInfo("Remote execution return value is " + returnValue);
+
+                    fileLogger.writeTextBlock("--- OUTPUT BEGIN ---");
+                    fileLogger.writeTextBlock(agent.getOutput());
+                    fileLogger.writeTextBlock("--- OUTPUT END ---");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    fileLogger.logError(e.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -9,12 +9,12 @@ public class ThyLogger {
             return;
         }
         switch (level) {
-            case "WARN":
-            case "ERROR":
+            case InfuraOfficeConfig.LOG_LEVEL_WARN:
+            case InfuraOfficeConfig.LOG_LEVEL_ERROR:
                 System.err.println(text);
                 break;
-            case "DEBUG":
-            case "INFO":
+            case InfuraOfficeConfig.LOG_LEVEL_DEBUG:
+            case InfuraOfficeConfig.LOG_LEVEL_INFO:
             default:
                 System.out.println(text);
                 break;
@@ -22,18 +22,18 @@ public class ThyLogger {
     }
 
     public static void logDebug(String content) {
-        log("DEBUG", content);
+        log(InfuraOfficeConfig.LOG_LEVEL_DEBUG, content);
     }
 
     public static void logInfo(String content) {
-        log("INFO", content);
+        log(InfuraOfficeConfig.LOG_LEVEL_INFO, content);
     }
 
     public static void logWarn(String content) {
-        log("WARN", content);
+        log(InfuraOfficeConfig.LOG_LEVEL_WARN, content);
     }
 
     public static void logError(String content) {
-        log("ERROR", content);
+        log(InfuraOfficeConfig.LOG_LEVEL_ERROR, content);
     }
 }
