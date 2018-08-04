@@ -14,7 +14,11 @@ import java.io.InputStream;
 public class SSHAgent {
     String output;
 
-    int executeCommandOnRemote(String host, int port, String user, String command) throws JSchException, IOException {
+    public String getOutput() {
+        return output;
+    }
+
+    public int executeCommandOnRemote(String host, int port, String user, String command) throws JSchException, IOException {
         String connectTag = "[" + user + "@" + host + ":" + port + "]";
 
         JSch jsch = new JSch();

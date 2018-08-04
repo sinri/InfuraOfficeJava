@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SinriLogKeeper - InfuraOffice</title>
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/js.cookie.js"></script>
+    <script src="../static/InfuraOfficeFrontendHelper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/common.css"/>
+</head>
+<body>
+<div id="app">
+    <div class="pane headBanner">
+        <h1>SinriLogKeeper - InfuraOffice</h1>
+        <div class="flexSpaceBetween">
+            <div>
+                <a href="home.html">Back to home page</a>
+            </div>
+            <div>
+                Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
+                <button v-on:click="logout">Sign out</button>
+            </div>
+        </div>
+    </div>
+    <div class="pane" style="border-bottom: 1px solid lightgray">
+        <div>
+            <label>Server:</label>
+            <select style="width: 150px" v-model="target_server_name" v-on:change="onServerChanged">
+                <option v-for="server in serverOptions" :value="server.serverName">{{server.serverName}}</option>
+            </select>
+            <label>Logs:</label>
+            <template v-if="loadingLogFiles">
+                <label style="width: 469px">Loading</label>
+            </template>
+            <select v-else style="width: 309px" v-model="target_log_path" v-on:change="onLogFileChanged">
+                <option v-for="log in logs" :value="log">{{log}}</option>
+            </select>
+            <label>{{file_size}}</label>
+        </div>
+        <div>
+            <label>Limited in tail lines:</label>
+            <input style="width: 144px" type="number" v-model="tailLines"/>
+            <label>Context Lines:</label>
+            <input style="width: 144px" type="number" v-model="aroundLines"/>
+            <label>Case Sensitive:</label>
+            <select style="width: 150px" v-model="isCaseSensitive">
+                <option value="NO">NO</option>
+                <option value="YES">YES</option>
+            </select>
+        </div>
+        <div>
+            <label>Grep Keyword:</label>
+            <input style="width: 463px" type="text" v-model="keyword"/>
+            <label>&nbsp;</label>
+            <button class="primary" style="width: 150px" v-on:click="searchLog">Fetch Contents</button>
+        </div>
+    </div>
+    <div class="pane" v-if="timeBeginLoadingLogContents!=null">
+        Loading Contents
+    </div>
+    <div class="pane" v-if="log_task!=null">
+        <div class="flexSpaceBetween">
+            <div>{{log_task.status}}</div>
+            <div>{{log_task.done_time}}</div>
+        </div>
+        <div style="width: 100%;">
+            <pre style="background: #dafdda;overflow: scroll;">{{log_task.output}}</pre>
+        </div>
+    </div>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            user_info: {
+                privileges: [],
+                role: "",
+                expire: 0,
+                username: '',
+                token: '',
+            },
+            serverOptions: [],
+            logs: [],
+            target_server_name: '',
+            target_log_path: '',
+            tailLines: '10000',
+            aroundLines: '10',
+            isCaseSensitive: 'NO',
+            keyword: '',
+            loadingLogFiles: false,
+            timeBeginLoadingLogContents: null,
+            content_timer: null,
+            log_task: null,
+            file_size: "",
+        },
+        methods: {
+            logout: function () {
+                CookieHelper.clearToken();
+                location.href = "login.html";
+            },
+            validateSession: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/session/validate",
+                    {},
+                    (data) => {
+                        this.user_info = data;
+                    },
+                    (error) => {
+                        console.log(error);
+                        alert("Session cannot be validated, you can try to logout and login again.");
+                        this.logout();
+                    }
+                )
+            },
+            listServerOptions: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/query/server",
+                    {},
+                    (data) => {
+                        console.log(data);
+                        this.serverOptions = data.options;
+                    },
+                    (error) => {
+                        alert("cannot fetch servers. " + error);
+                    }
+                )
+            },
+            onServerChanged: function () {
+                this.loadingLogFiles = true;
+                this.logs = [];
+                this.target_log_path = "";
+                this.file_size = "";
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/slk/files",
+                    {
+                        serverName: this.target_server_name
+                    },
+                    (data) => {
+                        console.log(data);
+                        this.logs = data.logs;
+                        this.loadingLogFiles = false;
+                    },
+                    (error) => {
+                        alert("cannot fetch logs of server. " + error);
+                        this.loadingLogFiles = false;
+                    }
+                )
+            },
+            onLogFileChanged: function () {
+                if (this.target_log_path === "") return;
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/slk/filesize",
+                    {
+                        serverName: this.target_server_name,
+                        filePath: this.target_log_path,
+                    },
+                    (data) => {
+                        console.log(data);
+                        this.file_size = data.fileSize;
+                    },
+                    (error) => {
+                        alert("cannot fetch servers. " + error);
+                        this.loadingLogFiles = false;
+                    }
+                )
+            },
+            searchLog: function () {
+                this.log_task = null;
+                this.timeBeginLoadingLogContents = new Date().toLocaleString("ja");
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/slk/search",
+                    {
+                        serverName: this.target_server_name,
+                        filePath: this.target_log_path,
+                        tailLines: this.tailLines,
+                        aroundLines: this.aroundLines,
+                        isCaseSensitive: this.isCaseSensitive,
+                        keyword: this.keyword,
+                    },
+                    (data) => {
+                        console.log(data);
+                        let taskIndex = data.taskIndex;
+                        let checker = () => {
+                            if (this.log_task && this.log_task.status === 'FETCHED') {
+                                clearInterval(this.content_timer);
+                                this.content_timer = null;
+                                return;
+                            }
+                            callInfuraOfficeJsonAPI(
+                                "post",
+                                "../api/maintain/task/info",
+                                {
+                                    taskIndex: taskIndex
+                                },
+                                (data) => {
+                                    console.log("For Task", taskIndex, data);
+                                    if (data.status === 'FETCHED' || data.status === 'FINISHED') {
+                                        clearInterval(this.content_timer);
+                                        this.content_timer = null;
+
+                                        this.log_task = {
+                                            status: data.status,
+                                            output: data.output,
+                                            return: data.return,
+                                            done_time: this.timeBeginLoadingLogContents + " - " + (new Date(data.done_time)).toLocaleString("ja"),
+                                        };
+
+                                        this.timeBeginLoadingLogContents = null;
+                                    }
+                                },
+                                (error) => {
+                                    console.log("Error for Task", taskIndex, error);
+                                    this.timeBeginLoadingLogContents = null;
+                                    clearInterval(this.content_timer);
+                                    this.content_timer = null;
+                                    alert("Fetch Log Contents API Failed. " + error);
+
+                                }
+                            )
+                        };
+                        this.content_timer = setInterval(checker, 500);
+                    },
+                    (error) => {
+                        alert("cannot fetch servers. " + error);
+                    }
+                )
+            }
+        },
+        mounted: function () {
+            if (!CookieHelper.isLogin()) {
+                location.href = "login.html";
+                return;
+            }
+            this.validateSession();
+            this.listServerOptions();
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,10 +1,12 @@
 package InfuraOffice.DataEntity;
 
+import InfuraOffice.RemoteAgent.SSHAgent;
 import InfuraOffice.RemoteAgent.TaskEntity;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.jcraft.jsch.JSchException;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.HashSet;
 
 public class ServerEntity extends AnyEntity {
@@ -43,12 +45,38 @@ public class ServerEntity extends AnyEntity {
     }
 
     public String raiseRemoteCommandExecutionTask(String command) {
-        HashMap<String, String> map = new HashMap<>();
-        map.put("ip", connectAddress);
-        map.put("user", sshUser);
-        map.put("command", command);
-        map.put("port", "" + sshPort);
-        TaskEntity taskEntity = TaskEntity.createTask("command", map);
+//        HashMap<String, String> map = new HashMap<>();
+//        map.put("ip", connectAddress);
+//        map.put("user", sshUser);
+//        map.put("command", command);
+//        map.put("port", "" + sshPort);
+        TaskEntity taskEntity = TaskEntity.createTaskToExecuteCommandOnOneServer(this, command);
+        //TaskEntity.createTask("command", map);
+        if (taskEntity == null) return "";
+        return taskEntity.index;
+    }
+
+    public String instantRemoteCommandExecution(String command) throws IOException, JSchException {
+        SSHAgent sshAgent = new SSHAgent();
+        sshAgent.executeCommandOnRemote(connectAddress, sshPort, sshUser, command);
+        return sshAgent.getOutput();
+    }
+
+    public String raiseReadPartialFileContentTask(String filePath, long tailLines, int aroundLines, boolean isCaseSensitive, String keyword) {
+//        HashMap<String, String> map = new HashMap<>();
+//        map.put("ip", connectAddress);
+//        map.put("user", sshUser);
+//        map.put("port", "" + sshPort);
+//
+//        map.put("filePath",filePath);
+//        map.put("rangeStart",rangeStart+"");
+//        map.put("rangeEnd",rangeEnd+"");
+//        map.put("aroundLines",aroundLines+"");
+//        map.put("isCaseSensitive",isCaseSensitive?"YES":"NO");
+//        map.put("keyword",keyword);
+
+        TaskEntity taskEntity = TaskEntity.createTaskToReadLogContentOnOneServer(this, filePath, aroundLines, tailLines, keyword, isCaseSensitive);
+        //TaskEntity.createTask("read_partial_file_content", map);
         if (taskEntity == null) return "";
         return taskEntity.index;
     }

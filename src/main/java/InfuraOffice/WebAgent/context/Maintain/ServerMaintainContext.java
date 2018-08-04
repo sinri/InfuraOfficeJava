@@ -18,12 +18,15 @@ public class ServerMaintainContext {
             String command = seekPost("command", "");
 
             HashMap<String, ServerEntity> servers = new HashMap<>();
-            for (String serverName : serverNames.split(",")) {
+            for (String serverName : serverNames.split("[\r\n]+")) {
+                if (serverName.trim().isEmpty()) continue;
                 ServerEntity entity = DataCenter.getSharedInstance().getServerDataCenter().getEntityWithKey(serverName.trim());
                 if (entity != null) servers.put(entity.serverName, entity);
             }
-            for (String serverGroupName : serverGroupNames.split(",")) {
+            for (String serverGroupName : serverGroupNames.split("[\r\n]+")) {
+                if (serverGroupName.trim().isEmpty()) continue;
                 ServerGroupEntity entity = DataCenter.getSharedInstance().getServerGroupDataCenter().getEntityWithKey(serverGroupName.trim());
+                if (entity == null) continue;
                 entity.servers.forEach(serverName -> {
                     ServerEntity innerEntity = DataCenter.getSharedInstance().getServerDataCenter().getEntityWithKey(serverName.trim());
                     if (innerEntity != null) servers.put(innerEntity.serverName, innerEntity);

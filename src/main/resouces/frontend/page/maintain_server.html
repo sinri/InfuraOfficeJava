@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Maintain Server - InfuraOffice</title>
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/js.cookie.js"></script>
+    <script src="../static/InfuraOfficeFrontendHelper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/common.css"/>
+</head>
+<body>
+<div id="app">
+    <div class="pane headBanner">
+        <h1>Maintain Server - InfuraOffice</h1>
+        <div class="flexSpaceBetween">
+            <div>
+                <a href="home.html">Back to home page</a>
+            </div>
+            <div>
+                Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
+                <button v-on:click="logout">Sign out</button>
+            </div>
+        </div>
+    </div>
+    <div class="pane">
+        <h2>Select Server</h2>
+        <div class="flexSpaceAround">
+            <div style="width: 30%">
+                <h3>Server Groups</h3>
+                <select multiple v-model="request.serverGroupNames" style="width:100%">
+                    <option v-for="item in serverGroupOptions" :value="item.groupName">
+                        {{item.groupName}}
+                    </option>
+                </select>
+            </div>
+            <div style="width: 30%">
+                <h3>Server</h3>
+                <select multiple v-model="request.serverNames" style="width:100%">
+                    <option v-for="item in serverOptions" :value="item.serverName">
+                        {{item.serverName}} - {{item.platformName}}
+                    </option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <h3>Involved Servers</h3>
+            <div class="flexStart">
+                <button class="dash" style="margin: 5px" v-for="item in involvedServers">
+                    {{item}}
+                </button>
+            </div>
+        </div>
+        <div>
+            <h3>Shell Command</h3>
+            <textarea style="width: 100%" v-model="request.command"></textarea>
+        </div>
+        <div>
+            <template v-if="involvedServers.length>0">
+                <button class="primary" v-on:click="submitTask">Execute</button>
+            </template>
+            <template v-else>
+                <span>Choose Target Servers First!</span>
+            </template>
+        </div>
+    </div>
+    <div class="pane">
+        <h2>Results</h2>
+        <div>
+            <div style="border: 1px solid lightgray;padding: 10px" v-for="task in tasks">
+                <div class="flexSpaceBetween">
+                    <h3>{{task.serverName}} - {{task.status}}</h3>
+                    <h3>{{task.done_time}}</h3>
+                </div>
+                <div style="background: #c2eecd;width: 100%;overflow: scroll;">
+                    <pre>{{task.output}}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            user_info: {
+                privileges: [],
+                role: "",
+                expire: 0,
+                username: '',
+                token: '',
+            },
+            serverGroupOptions: [],
+            serverOptions: [],
+            request: {
+                serverNames: [],
+                serverGroupNames: [],
+                command: '',
+            },
+            tasks: [],
+        },
+        computed: {
+            involvedServers: function () {
+                let total = {};
+                for (let i = 0; i < this.request.serverNames.length; i++) {
+                    total[this.request.serverNames[i]] = this.request.serverNames[i];
+                }
+                for (let i = 0; i < this.request.serverGroupNames.length; i++) {
+                    let serverGroupName = this.request.serverGroupNames[i];
+                    let servers = [];
+                    for (let j = 0; j < this.serverGroupOptions.length; j++) {
+                        if (this.serverGroupOptions[j].groupName === serverGroupName) {
+                            servers = this.serverGroupOptions[j].servers;
+                            break;
+                        }
+                    }
+                    for (let j = 0; j < servers.length; j++) {
+                        total[servers[j]] = servers[j];
+                    }
+                }
+
+                return Object.values(total);
+            }
+        },
+        methods: {
+            logout: function () {
+                CookieHelper.clearToken();
+                location.href = "login.html";
+            },
+            validateSession: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/session/validate",
+                    {},
+                    (data) => {
+                        this.user_info = data;
+                    },
+                    (error) => {
+                        console.log(error);
+                        alert("Session cannot be validated, you can try to logout and login again.");
+                        this.logout();
+                    }
+                )
+            },
+            listPlatformOptions: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/query/platform",
+                    {},
+                    (data) => {
+                        console.log("listPlatformOptions", data);
+                        this.platformOptions = data.options;
+                    },
+                    (error) => {
+                        console.log("listPlatformOptions error", error);
+                    }
+                )
+            },
+            listServerGroupOptions: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/query/servergroup",
+                    {},
+                    (data) => {
+                        console.log(data);
+                        this.serverGroupOptions = data.options;
+                    },
+                    (error) => {
+                        alert("cannot fetch server groups. " + error);
+                    }
+                )
+            },
+            listServerOptions: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/query/server",
+                    {},
+                    (data) => {
+                        console.log(data);
+                        this.serverOptions = data.options;
+                    },
+                    (error) => {
+                        alert("cannot fetch servers. " + error);
+                    }
+                )
+            },
+            submitTask: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/maintain/server/command",
+                    {
+                        serverNames: this.request.serverNames.join("\n"),
+                        serverGroupNames: this.request.serverGroupNames.join("\n"),
+                        command: this.request.command
+                    },
+                    (data) => {
+                        console.log(data);
+                        this.tasks = [];
+                        for (let serverName in data.tasks) {
+                            if (data.tasks.hasOwnProperty(serverName)) {
+                                this.tasks.push({
+                                    serverName: serverName,
+                                    taskIndex: data.tasks[serverName],
+                                    status: 'FRONTEND_RECEIVED',
+                                    output: '',
+                                    return: '',
+                                    done_time: '',
+                                });
+                            }
+                        }
+                        setTimeout(this.checkTasks, 500);
+                    },
+                    (error) => {
+                        alert("Failed " + error);
+                    }
+                )
+            },
+            checkTasks: function () {
+                console.log((new Date()), 'checkTasks');
+                if (this.checkTasksHasNotCompleted()) {
+                    setTimeout(this.checkTasks, 1000);
+                } else {
+                    console.log("All Task Result Fetched!");
+                }
+            },
+            checkTasksHasNotCompleted: function () {
+                let notCompleted = false;
+                for (let i = 0; i < this.tasks.length; i++) {
+                    let taskIndex = this.tasks[i].taskIndex;
+                    if (this.tasks[i].status === 'FINISHED' || this.tasks[i].status === 'FETCHED') continue;
+                    notCompleted = true;
+                    callInfuraOfficeJsonAPI(
+                        "post",
+                        "../api/maintain/task/info",
+                        {
+                            taskIndex: taskIndex
+                        },
+                        (data) => {
+                            console.log("For Task", taskIndex, data);
+                            this.tasks[i].status = data.status;
+                            this.tasks[i].output = data.output;
+                            this.tasks[i].return = data.return;
+                            this.tasks[i].done_time = (new Date(data.done_time)).toLocaleString("ja");
+                        },
+                        (error) => {
+                            console.log("Error for Task", taskIndex, error);
+                        }
+                    )
+                }
+                return notCompleted;
+            }
+        },
+        mounted: function () {
+            if (!CookieHelper.isLogin()) {
+                location.href = "login.html";
+                return;
+            }
+            this.validateSession();
+            this.listServerGroupOptions();
+            this.listServerOptions();
+        }
+    });
+</script>
+</body>
+</html>

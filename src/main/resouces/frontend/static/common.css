@@ -2,6 +2,12 @@
     margin: 10px;
 }
 
+.flexStart {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+}
+
 .flexSpaceBetween {
     display: flex;
     justify-content: space-between;

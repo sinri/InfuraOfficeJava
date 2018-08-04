@@ -17,6 +17,11 @@ public class RemoteTaskContext {
             registerDataProperty("output", taskEntity.output);
             registerDataProperty("done_time", taskEntity.doneTime);
             sayOK();
+
+            // finally
+
+            taskEntity.status = TaskEntity.STATUS_FETCHED;
+            RemoteAgent.sharedInstance().taskMap.put(taskIndex, taskEntity);
         }
     }
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>Home - InfuraOffice</title>
@@ -39,6 +39,22 @@
                 <li>
                     <a href="manage_database.html">Databases</a>
                 </li>
+            </ul>
+        </div>
+    </div>
+    <div if="user_info.role='ADMIN'">
+        <h2>Maintain</h2>
+        <div>
+            <ul>
+                <li><a href="maintain_server.html">Maintain Server</a></li>
+            </ul>
+        </div>
+    </div>
+    <div>
+        <h2>SinriLogKeeper</h2>
+        <div>
+            <ul>
+                <li><a href="slk.html">Read Logs</a></li>
             </ul>
         </div>
     </div>

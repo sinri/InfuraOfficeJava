@@ -7,6 +7,7 @@ import InfuraOffice.WebAgent.context.LoginContext;
 import InfuraOffice.WebAgent.context.Maintain.RemoteTaskContext;
 import InfuraOffice.WebAgent.context.Maintain.ServerMaintainContext;
 import InfuraOffice.WebAgent.context.Management.*;
+import InfuraOffice.WebAgent.context.SinriLogKeeper.SLKContext;
 import InfuraOffice.WebAgent.context.StaticContext;
 import com.sun.net.httpserver.HttpServer;
 
@@ -102,5 +103,11 @@ public class WebAgent {
         server.createContext("/api/query/server", new EntityQueryContext.FetchServerOptionsHandler());
         server.createContext("/api/query/servergroup", new EntityQueryContext.FetchServerGroupOptionsHandler());
         server.createContext("/api/query/database", new EntityQueryContext.FetchDatabaseOptionsHandler());
+
+        // PART V: SinriLogKeeper
+
+        server.createContext("/api/slk/files", new SLKContext.FetchLogFileListTaskHandler());
+        server.createContext("/api/slk/filesize", new SLKContext.SyncFetchLogFileSizeTaskHandler());
+        server.createContext("/api/slk/search", new SLKContext.FetchLogContentTaskHandler());
     }
 }
