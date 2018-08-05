@@ -50,4 +50,11 @@ public class ScheduleAgent {
         }
     }
 
+    public static void removeOneCronJob(String jobGroup, String jobName) throws SchedulerException {
+        JobKey jobKey = JobKey.jobKey(jobName, jobGroup);
+        if (scheduler().checkExists(jobKey)) {
+            scheduler().deleteJob(jobKey);
+        }
+    }
+
 }

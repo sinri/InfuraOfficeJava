@@ -117,7 +117,7 @@ public class WebAgent {
         server.createContext("/api/slk/search", new SLKContext.FetchLogContentTaskHandler());
 
         // PART VI: JOB
-        server.createContext("/api/job/servermainjob/list", new JobContext.ServerMainJobListHandler());
-
+        server.createContext("/api/job/servermaintainjob/list", new JobContext.ServerMaintainJobListHandler());
+        server.createContext("/api/job/servermaintainjob/act", new JobContext.ServerMaintainJobUpdateHandler());
     }
 }

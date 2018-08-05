@@ -16,6 +16,7 @@ public class FileLogger {
         try {
             bufferedWriter.write(text);
             bufferedWriter.newLine();
+            bufferedWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -43,5 +44,9 @@ public class FileLogger {
 
     public void logError(String content) {
         log(InfuraOfficeConfig.LOG_LEVEL_ERROR, content);
+    }
+
+    public void close() throws IOException {
+        bufferedWriter.close();
     }
 }

@@ -56,7 +56,7 @@ public class ServerMaintainJobEntity extends AnyEntity {
 
     public void execute() {
         try {
-            FileLogger fileLogger = new FileLogger(InfuraOfficeConfig.getSharedInstance().jobLogDir + "/" + this.cronJobName + "_" + (new SimpleDateFormat("yyyy-MM-dd").format(new Date())));
+            FileLogger fileLogger = new FileLogger(InfuraOfficeConfig.getSharedInstance().jobLogDir + "/" + this.cronJobName + "_" + (new SimpleDateFormat("yyyy-MM-dd").format(new Date())) + ".log");
 
             HashSet<String> involvedServerNames = new HashSet<>();
             serverGroupNames.forEach(serverGroupName -> {
@@ -85,12 +85,25 @@ public class ServerMaintainJobEntity extends AnyEntity {
                     fileLogger.writeTextBlock(agent.getOutput());
                     fileLogger.writeTextBlock("--- OUTPUT END ---");
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     fileLogger.logError(e.getMessage());
                 }
             });
+            fileLogger.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
+
+/*
+cronExpression in Quartz Framework
+字段名                 允许的值                        允许的特殊字符
+秒                         0-59                               , - * /
+分                         0-59                               , - * /
+小时                     0-23                               , - * /
+日                         1-31                               , - * ? / L W C
+月                         1-12 or JAN-DEC         , - * /
+周几                     1-7 or SUN-SAT           , - * ? / L C #
+年 (可选字段)     empty, 1970-2099      , - * /
+ */

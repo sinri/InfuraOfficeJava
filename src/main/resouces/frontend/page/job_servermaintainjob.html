@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Server Maintain Job - InfuraOffice</title>
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/js.cookie.js"></script>
+    <script src="../static/InfuraOfficeFrontendHelper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/common.css"/>
+</head>
+<body>
+<div id="app">
+    <div class="pane headBanner">
+        <h1>Server Maintain Job - InfuraOffice</h1>
+        <div class="flexSpaceBetween">
+            <div>
+                <a href="home.html">Back to home page</a>
+            </div>
+            <div>
+                Signed in as {{ user_info.username }}. Thou art {{ user_info.role }}.
+                <button v-on:click="logout">Sign out</button>
+            </div>
+        </div>
+    </div>
+    <div class="pane" style="text-align: right">
+        <button v-on:click="editJob()" class="info">Create New Job</button>
+    </div>
+    <div class="pane">
+        <!--{{jobs}}-->
+        <table style="width: 100%">
+            <tr>
+                <th>Cron Job Name</th>
+                <th>Server Groups</th>
+                <th>Servers</th>
+                <th>Cron Expression</th>
+                <th>Active</th>
+                <th>Action</th>
+            </tr>
+            <tr v-for="item in jobs">
+                <td>{{item.cronJobName}}</td>
+                <td>
+                    <span v-for="group in item.serverGroupNames">{{group}}&nbsp;</span>
+                </td>
+                <td>
+                    <span v-for="server in item.serverNames">{{server}}&nbsp;</span>
+                </td>
+                <td>{{item.cronExpression}}</td>
+                <td>{{item.active?'Active':'Inactive'}}</td>
+                <td>
+                    <div class="flexSpaceAround">
+                        <button v-on:click="editJob(item)" class="info">Edit</button>
+                        <button v-on:click="deleteJob(item.cronJobName)" class="warning">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="pane" v-if="showEditPane || showCreatePane">
+        <h2>Update Server Maintain Job</h2>
+        <div>
+            <label>Cron Job Name:</label>
+            <template v-if="showCreatePane">
+                <input type="text" style="width: 200px" v-model="edit_job.cronJobName"/>
+            </template>
+            <template v-else>
+                <span>{{edit_job.cronJobName}}</span>
+            </template>
+        </div>
+        <div>
+            <label>Server Groups:</label>
+            <select style="width: 150px" multiple v-model="edit_job.serverGroupNames">
+                <option v-for="item in serverGroupOptions" :value="item.groupName">{{item.groupName}}</option>
+            </select>
+        </div>
+        <div>
+            <label>Servers:</label>
+            <select style="width: 150px" multiple v-model="edit_job.serverNames">
+                <option v-for="item in serverOptions" :value="item.serverName">{{item.serverName}}</option>
+            </select>
+        </div>
+        <div>
+            <label>Cron Expression:</label>
+            <input type="text" style="width: 200px" v-model="edit_job.cronExpression"/>
+        </div>
+        <div>
+            <label>Note:</label>
+            <span>
+                <!--秒 分 时 日 月 星期 年（可选）-->
+                [Second] [Minute] [Hour] [Day|?] [Month] [Weekday|?] ([Year])
+            </span>
+        </div>
+        <div>
+            <label>Command:</label>
+            <textarea style="width: 400px;height: 200px;" v-model="edit_job.command"></textarea>
+        </div>
+        <div>
+            <label>Active:</label>
+            <select v-model="edit_job.active">
+                <option value="YES">Active</option>
+                <option value="NO">Inactive</option>
+            </select>
+        </div>
+        <div style="text-align: right">
+            <button v-on:click="showEditPane=false;showCreatePane=false;" class="dash">Cancel</button>
+            <button v-on:click="submitModification" class="primary">Update</button>
+        </div>
+    </div>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            user_info: {
+                privileges: [],
+                role: "",
+                expire: 0,
+                username: '',
+                token: '',
+            },
+            serverOptions: [],
+            serverGroupOptions: [],
+            jobs: [],
+            edit_job: {
+                cronJobName: '',
+                serverGroupNames: [],
+                serverNames: [],
+                cronExpression: '',
+                //type: '',
+                command: '',
+                active: '',
+            },
+            showEditPane: false,
+            showCreatePane: false,
+        },
+        methods: {
+            logout: function () {
+                CookieHelper.clearToken();
+                location.href = "login.html";
+            },
+            validateSession: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/session/validate",
+                    {},
+                    (data) => {
+                        this.user_info = data;
+                    },
+                    (error) => {
+                        console.log(error);
+                        alert("Session cannot be validated, you can try to logout and login again.");
+                        this.logout();
+                    }
+                )
+            },
+            listServerOptions: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/query/server",
+                    {},
+                    (data) => {
+                        console.log(data);
+                        this.serverOptions = data.options;
+                    },
+                    (error) => {
+                        alert("cannot fetch servers. " + error);
+                    }
+                )
+            },
+            listServerGroupOptions: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/query/servergroup",
+                    {},
+                    (data) => {
+                        console.log(data);
+                        this.serverGroupOptions = data.options;
+                    },
+                    (error) => {
+                        alert("cannot fetch servers. " + error);
+                    }
+                )
+            },
+            listServerMaintainJobs: function () {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/job/servermaintainjob/list",
+                    {},
+                    (data) => {
+                        console.log(data);
+                        this.jobs = data.list;
+                    },
+                    (error) => {
+                        alert("Cannot fetch server maintain job list! " + error);
+                    }
+                )
+            },
+            editJob: function (job) {
+                if (job) {
+                    this.showCreatePane = false;
+                    this.showEditPane = true;
+                    // fulfill
+                    this.edit_job = {
+                        cronJobName: job.cronJobName,
+                        serverGroupNames: job.serverGroupNames,
+                        serverNames: job.serverNames,
+                        cronExpression: job.cronExpression,
+                        //type: '',
+                        command: job.command,
+                        active: job.active ? 'YES' : 'NO',
+                    };
+                } else {
+                    this.showCreatePane = true;
+                    this.showEditPane = false;
+                    this.edit_job = {
+                        cronJobName: '',
+                        serverGroupNames: [],
+                        serverNames: [],
+                        cronExpression: '0 0 * * * ?',
+                        //type: '',
+                        command: '',
+                        active: '',
+                    };
+                }
+            },
+            submitModification: function () {
+                let parameters = {
+                    act: 'update',
+                    cronJobName: this.edit_job.cronJobName,
+                    serverGroupNames: this.edit_job.serverGroupNames.join("\n"),
+                    serverNames: this.edit_job.serverNames.join("\n"),
+                    cronExpression: this.edit_job.cronExpression,
+                    //type: '',
+                    command: this.edit_job.command,
+                    active: this.edit_job.active,
+                };
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/job/servermaintainjob/act",
+                    parameters,
+                    (data) => {
+                        console.log(data);
+                        alert("Modification Accepted");
+                        this.showCreatePane = false;
+                        this.showEditPane = false;
+                        this.listServerMaintainJobs();
+                    },
+                    (error) => {
+                        alert("Cannot update! " + error);
+                    }
+                )
+            },
+            deleteJob: function (cronJobName) {
+                callInfuraOfficeJsonAPI(
+                    "post",
+                    "../api/job/servermaintainjob/act",
+                    {
+                        act: 'delete',
+                        cronJobName: cronJobName,
+                    },
+                    (data) => {
+                        console.log(data);
+                        alert("Job Deleted");
+                        this.listServerMaintainJobs();
+                    },
+                    (error) => {
+                        alert("Cannot delete! " + error);
+                    }
+                )
+            }
+        },
+        mounted: function () {
+            if (!CookieHelper.isLogin()) {
+                location.href = "login.html";
+                return;
+            }
+            this.validateSession();
+            this.listServerOptions();
+            this.listServerGroupOptions();
+            this.listServerMaintainJobs();
+        }
+    });
+</script>
+</body>
+</html>
